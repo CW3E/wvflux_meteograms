@@ -1,0 +1,146 @@
+"""
+Filename:    run_tool_parallel.py
+Author:      Deanna Nash, dnash@ucsd.edu
+Description: For GFS, and ECMWF: output .png files of time-height meteograms plot for different lat/lons.
+"""
+import os
+import sys
+import glob
+import numpy as np
+import pandas as pd
+from datetime import datetime
+import xarray as xr
+from multiprocessing import Pool
+
+from read_deterministic_data import load_GFS_datasets, load_ECMWF_datasets, read_preprocessed_IVT_data
+from calc_funcs import format_timedelta_to_HHMMSS
+from cw3e_tools import remove_tmp_data_files
+from plotter import plot_time_height_meteograms
+
+model_name = sys.argv[1]
+start_time = pd.Timestamp.today()
+print('Creating WV Flux Meteograms for {0}'.format(model_name))
+
+## FIRST LOOP - LEAD TIME ##
+if model_name == 'ECMWF':
+    arr1 = np.arange(0, 72+3, 3)
+    arr2 = np.arange(78, 168+6, 6)
+    F_lst = np.concatenate((arr1, arr2), axis=0)
+elif model_name == 'GFS':
+    F_lst = np.arange(0, 168+3, 3)
+
+fdate='2025020712' ## set this to None to get most recently downloaded data
+
+#################################
+### CHECK TO REMOVE TMP FILES ###
+#################################
+print('Removing tmp intermediate data files...') 
+# Specify the directory and the pattern
+tmp_directory = "/home/dnash/comet_data/tmp/"
+pattern = "tmp_{0}*.nc".format(model_name)  # Delete all tmp files
+remove_tmp_data_files(tmp_directory, pattern)
+    
+############################################
+### PREPROCESS INTERMEDIATE GFS OR ECMWF ###
+############################################
+print('...preprocess intermediate data ...')
+
+def multiP_preprocess_intermediate(model_name, F, fdate):
+    ##############################
+    ### PREP INTERMEDIATE DATA ###
+    ##############################
+    print('... Loading data for {0} hour lead'.format(F))
+    if model_name == 'ECMWF':
+        s = load_ECMWF_datasets(F=F, fdate=fdate)
+        model_data = s.calc_vars()
+
+    elif model_name == 'GFS':
+        s = load_GFS_datasets(F=F, fdate=fdate)
+        model_data, tmp = s.calc_vars()
+
+if __name__ == '__main__':
+    with Pool(processes=30) as pool:
+        for F in F_lst:
+            result = pool.apply_async(func=multiP_preprocess_intermediate,args=(model_name, F, fdate))
+        pool.close()
+        pool.join()
+    
+
+##############################
+### LOAD INTERMEDIATE DATA ###
+##############################
+files = glob.glob(tmp_directory + 'tmp_{0}_*.nc'.format(model_name))
+sorted_files = sorted(files)
+ds = xr.open_mfdataset(sorted_files, engine='netcdf4', concat_dim="step", combine='nested')
+
+## need to fix precipitation
+if model_name == 'ECMWF':
+    tp = ds.tp.fillna(0) # make sure nan at beginning is 0 to do calculation right
+    tp = tp.diff(dim='step') # calculate difference between time steps
+    ds = ds.drop_vars(["tp"]) # get rid of old tp (accumulated variable)
+    ds = xr.merge([ds, tp]) # merge dataset with new tp
+    
+if model_name == 'GFS':
+    ts_3hr = pd.timedelta_range(start='0 day', periods=57, freq='3H')
+    ts_6hr = pd.timedelta_range(start='0 day', periods=29, freq='6H')
+    tp = ds.tp ## pull out tp
+    prec_3hr = tp.sel(step=ts_3hr[1::2]) ## grab only the 3hr values
+    tp2 = tp.diff(dim='step') ## calculate difference in precip
+    ## the values for 6hr timesteps are correct, the values for 3hr timesteps are incorrect
+    prec_6hr = tp2.sel(step=ts_6hr[1:]) # grab only the 6hr values
+    new_prec = prec_3hr.combine_first(prec_6hr) # combine the correct 3hr values with the correct 6hr values
+    ds = ds.drop_vars(["tp"]) # get rid of old tp (accumulated variable)
+    ds = xr.merge([ds, new_prec]) # merge dataset with new tp
+    
+ivt = read_preprocessed_IVT_data(model=model_name, F_lst=F_lst, fdate=pd.to_datetime(ds.time.values).strftime('%Y%m%d%H'))
+ds = ds.assign(ivt=(['step','latitude','longitude'],ivt.ivt.values))
+
+###############################################
+### CREATE ARGUMENT LIST FOR CREATING PLOTS ###
+###############################################
+
+lat_lst = np.arange(26, 51, 1)
+lon_lst = np.arange(111, 128, 1)
+var_lst = ['r', 'wvflux']
+dur_lst = [3, 7]
+
+arglst_USWEST = []
+for i, x in enumerate(lon_lst):
+    for j, y in enumerate(lat_lst):
+        for k, varname in enumerate(var_lst):
+            for l, dur in enumerate(dur_lst):
+                arglst_USWEST.append((x,y, varname, dur))
+
+lat_lst = np.arange(51, 70, 1)
+lon_lst = np.arange(130, 175, 1)               
+arglst_AK = []
+for i, x in enumerate(lon_lst):
+    for j, y in enumerate(lat_lst):
+        for k, varname in enumerate(var_lst):
+            for l, dur in enumerate(dur_lst):
+                arglst_AK.append((x,y, varname, dur))
+                
+final_arglst = arglst_USWEST + arglst_AK
+
+####################
+### CREATE PLOTS ###
+####################
+print('...create plots ...')
+
+def multiP_create_time_height_meteograms(ds, varname, lat, lon, model_name, duration):
+    plot_time_height_meteograms(ds, varname, lat, 360-lon, model_name, duration)
+
+if __name__ == '__main__':
+    with Pool(processes=30) as pool:
+        for argval in final_arglst:
+            lon, lat, varname, dur = argval
+            result = pool.apply_async(func=multiP_create_time_height_meteograms,args=(ds, varname, lat, lon, model_name, dur))
+        pool.close()
+        pool.join()
+
+end_time = pd.Timestamp.today()
+td = end_time - start_time
+td = format_timedelta_to_HHMMSS(td)
+print('Plots for {0} took {1} to run'.format(model_name, td))
+        
+    
