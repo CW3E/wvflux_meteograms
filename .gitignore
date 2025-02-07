@@ -95,3 +95,4 @@ auxhist*
 # other #
 # ################
 .ipynb_checkpoints/*
+/data/tmp/ipynb_checkpoints/*
