@@ -29,14 +29,15 @@ if model_name == 'ECMWF':
 elif model_name == 'GFS':
     F_lst = np.arange(0, 168+3, 3)
 
-fdate='2025020712' ## set this to None to get most recently downloaded data
+fdate=None ## set this to None to get most recently downloaded data
 
 #################################
 ### CHECK TO REMOVE TMP FILES ###
 #################################
 print('Removing tmp intermediate data files...') 
 # Specify the directory and the pattern
-tmp_directory = "/home/dnash/comet_data/tmp/"
+# tmp_directory = "/home/dnash/comet_data/tmp/"
+directory = "/data/projects/operations/wvflux_meteograms/data/tmp/"
 pattern = "tmp_{0}*.nc".format(model_name)  # Delete all tmp files
 remove_tmp_data_files(tmp_directory, pattern)
     
@@ -142,5 +143,13 @@ end_time = pd.Timestamp.today()
 td = end_time - start_time
 td = format_timedelta_to_HHMMSS(td)
 print('Plots for {0} took {1} to run'.format(model_name, td))
+
+########################
+### REMOVE TMP FILES ###
+########################
+print('Removing tmp intermediate data files...') 
+# Specify the directory and the pattern
+pattern = "tmp*.nc"  # Delete all .txt files
+remove_tmp_data_files(tmp_directory, pattern)
         
     
