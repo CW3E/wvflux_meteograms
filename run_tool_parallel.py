@@ -37,7 +37,7 @@ fdate=None ## set this to None to get most recently downloaded data
 print('Removing tmp intermediate data files...') 
 # Specify the directory and the pattern
 # tmp_directory = "/home/dnash/comet_data/tmp/"
-directory = "/data/projects/operations/wvflux_meteograms/data/tmp/"
+tmp_directory = "/data/projects/operations/wvflux_meteograms/data/tmp/"
 pattern = "tmp_{0}*.nc".format(model_name)  # Delete all tmp files
 remove_tmp_data_files(tmp_directory, pattern)
     
