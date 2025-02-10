@@ -96,3 +96,4 @@ auxhist*
 # ################
 .ipynb_checkpoints/*
 /data/tmp/ipynb_checkpoints/*
+.ncdu_output/*
