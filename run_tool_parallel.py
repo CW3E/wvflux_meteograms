@@ -18,6 +18,7 @@ from cw3e_tools import remove_tmp_data_files
 from plotter import plot_time_height_meteograms
 
 model_name = sys.argv[1]
+fdate = sys.argv[2] ## set this to None to get most recently downloaded data
 start_time = pd.Timestamp.today()
 print('Creating WV Flux Meteograms for {0}'.format(model_name))
 
@@ -28,8 +29,6 @@ if model_name == 'ECMWF':
     F_lst = np.concatenate((arr1, arr2), axis=0)
 elif model_name == 'GFS':
     F_lst = np.arange(0, 168+3, 3)
-
-fdate=None ## set this to None to get most recently downloaded data
 
 #################################
 ### CHECK TO REMOVE TMP FILES ###
