@@ -14,8 +14,8 @@ To run all points for each model:
 
 ```bash
 ## runs plots for GFS
-singularity exec --bind /data:/data,/home:/home,/work:/work,/common:/common -e /data/projects/operations/time_height_meteograms/envs/wvflux_meteograms.sif /opt/conda/envs/container/bin/python /data/projects/operations/wvflux_meteorgrams/run_tool_parallel.py "GFS"
+singularity exec --bind /data:/data,/home:/home,/work:/work,/common:/common -e /data/projects/operations/wvflux_meteograms/envs/wvflux_meteograms.sif /opt/conda/envs/container/bin/python /data/projects/operations/wvflux_meteorgrams/run_tool_parallel.py "GFS"
 
 ## runs plots for ECWMF
-singularity exec --bind /data:/data,/home:/home,/work:/work,/common:/common -e /data/projects/operations/time_height_meteograms/envs/wvflux_meteograms.sif /opt/conda/envs/container/bin/python /data/projects/operations/wvflux_meteorgrams/run_tool_parallel.py "ECMWF"
+singularity exec --bind /data:/data,/home:/home,/work:/work,/common:/common -e /data/projects/operations/wvflux_meteograms/envs/wvflux_meteograms.sif /opt/conda/envs/container/bin/python /data/projects/operations/wvflux_meteorgrams/run_tool_parallel.py "ECMWF"
 ```
