@@ -9,6 +9,7 @@ import glob
 import numpy as np
 import pandas as pd
 from datetime import datetime
+import netCDF4
 import xarray as xr
 from multiprocessing import Pool
 

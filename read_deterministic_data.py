@@ -345,7 +345,8 @@ class load_GFS_datasets:
         ds = ds.assign(freezing_level_pres=(['latitude','longitude'],freezing_level))
 
         ## write intermediate data files
-        out_fname = '/home/dnash/comet_data/tmp/tmp_{0}_{1}.nc'.format('GFS', str(self.F).zfill(3))
+        tmp_directory = "/data/projects/operations/wvflux_meteograms/data/tmp/"
+        out_fname = tmp_directory+'tmp_{0}_{1}.nc'.format('GFS', str(self.F).zfill(3))
         ds.to_netcdf(path=out_fname, mode = 'w', format='NETCDF4')
         ds.close() ## close data
 
@@ -494,7 +495,8 @@ class load_ECMWF_datasets:
         model_data = model_data.rename({'rh': 'r'})
 
         ## write intermediate data files
-        out_fname = '/home/dnash/comet_data/tmp/tmp_{0}_{1}.nc'.format('ECMWF', str(self.F).zfill(3))
+        tmp_directory = "/data/projects/operations/wvflux_meteograms/data/tmp/"
+        out_fname = tmp_directory + 'tmp_{0}_{1}.nc'.format('ECMWF', str(self.F).zfill(3))
         model_data.to_netcdf(path=out_fname, mode = 'w', format='NETCDF4')
         model_data.close() ## close data
         
