@@ -103,7 +103,7 @@ ds = ds.assign(ivt=(['step','latitude','longitude'],ivt.ivt.values))
 lat_lst = np.arange(26, 51, 1)
 lon_lst = np.arange(111, 128, 1)
 var_lst = ['r', 'wvflux']
-dur_lst = [3, 7]
+dur_lst = [7]
 
 arglst_USWEST = []
 for i, x in enumerate(lon_lst):
@@ -138,8 +138,8 @@ if __name__ == '__main__':
         for argval in final_arglst:
             lon, lat, varname, dur = argval
             print('kicked off', argval, flush=True)
-            # result = pool.apply_async(func=multiP_create_time_height_meteograms,args=(ds, varname, lat, lon, model_name, dur))
-            multiP_create_time_height_meteograms(ds, varname, lat, lon, model_name, dur)
+            result = pool.apply_async(func=multiP_create_time_height_meteograms,args=(ds, varname, lat, lon, model_name, dur))
+            # multiP_create_time_height_meteograms(ds, varname, lat, lon, model_name, dur)
             print('after kick off', argval, flush=True)
         pool.close()
         pool.join()
