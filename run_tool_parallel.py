@@ -139,7 +139,7 @@ if __name__ == '__main__':
             lon, lat, varname, dur = argval
             print('kicked off', argval, flush=True)
             # result = pool.apply_async(func=multiP_create_time_height_meteograms,args=(ds, varname, lat, lon, model_name, dur))
-            multiP_create_time_height_meteograms(ds, varname, lat, lon, model_name, duration)
+            multiP_create_time_height_meteograms(ds, varname, lat, lon, model_name, dur)
             print('after kick off', argval, flush=True)
         pool.close()
         pool.join()
