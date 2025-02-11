@@ -129,9 +129,9 @@ final_arglst = arglst_USWEST + arglst_AK
 print('...create plots ...')
 
 def multiP_create_time_height_meteograms(ds, varname, lat, lon, model_name, duration):
-    print('plotting', lat, lon, varname, flush=True)
+    print('plotting {3}-day {0} at {1}N, {2}W'.format(lat, lon, varname, duration), flush=True)
     plot_time_height_meteograms(ds, varname, lat, 360-lon, model_name, duration)
-    print('finished plotting', lat, lon, varname, flush=True)
+    print('finished plotting{3}-day {0} at {1}N, {2}W'.format(lat, lon, varname, duration), flush=True)
 
 if __name__ == '__main__':
     with Pool(processes=16) as pool:
@@ -154,7 +154,7 @@ print('Plots for {0} took {1} to run'.format(model_name, td))
 ########################
 print('Removing tmp intermediate data files...') 
 # Specify the directory and the pattern
-pattern = "tmp*.nc"  # Delete all .txt files
+pattern = "tmp_{0}*.nc".format(model_name)  # Delete all tmp files
 remove_tmp_data_files(tmp_directory, pattern)
         
     
