@@ -299,10 +299,11 @@ def plot_time_height_meteograms(ds, varname, lat, lon, model_name, duration):
 
     fig = plt.figure(figsize=(10., 14.))
     fig.dpi = current_dpi
+    fig_path = '/data/projects/operations/wvflux_meteograms/figs/'
     if varname == 'wvflux':
-        fname = 'figs/{0}/{1}DayWVFlux_{2}_{3}'.format(model_name, duration, flat_lbl, flon_lbl)
+        fname = fig_path + '{0}/{1}DayWVFlux_{2}_{3}'.format(model_name, duration, flat_lbl, flon_lbl)
     elif varname == 'r':
-        fname = 'figs/{0}/{1}DayRH_{2}_{3}'.format(model_name, duration, flat_lbl, flon_lbl)
+        fname = fig_path + '{0}/{1}DayRH_{2}_{3}'.format(model_name, duration, flat_lbl, flon_lbl)
         
     
     fmt = 'png'
