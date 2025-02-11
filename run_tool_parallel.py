@@ -129,13 +129,17 @@ final_arglst = arglst_USWEST + arglst_AK
 print('...create plots ...')
 
 def multiP_create_time_height_meteograms(ds, varname, lat, lon, model_name, duration):
+    print('plotting', lat, lon, varname, flush=True)
     plot_time_height_meteograms(ds, varname, lat, 360-lon, model_name, duration)
+    print('finished plotting', lat, lon, varname, flush=True)
 
 if __name__ == '__main__':
-    with Pool(processes=30) as pool:
+    with Pool(processes=16) as pool:
         for argval in final_arglst:
             lon, lat, varname, dur = argval
+            print('kicked off', argval, flush=True)
             result = pool.apply_async(func=multiP_create_time_height_meteograms,args=(ds, varname, lat, lon, model_name, dur))
+            print('after kick off', argval, flush=True)
         pool.close()
         pool.join()
 
