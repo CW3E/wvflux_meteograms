@@ -470,7 +470,7 @@ class load_ECMWF_datasets:
                                      "longitude": rh.longitude.values})
 
         ## putting u, v, and pressure and 3D lat into a dataset
-        ds_lst = [ecmwf_s2d["v_wind"], ecmwf_s2d["u_wind"], wv_flux, ecmwf_s2d["pressure"], rh, ecmwf_s2d["temperature"]]
+        ds_lst = [ecmwf_s2d["v_wind"], ecmwf_s2d["u_wind"], wv_flux, valid_time_3D, ecmwf_s2d["pressure"], rh, ecmwf_s2d["temperature"]]
         ds1 = xr.merge(ds_lst)
 
         ## build final dataset
