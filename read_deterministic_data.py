@@ -460,7 +460,7 @@ class load_ECMWF_datasets:
         a = ecmwf_s2d["u_wind"].valid_time
         b = ecmwf_s2d["u_wind"]
         a2, b2 = xr.broadcast(a, b)
-        a2.name = 'valid_time_3D'
+        a2.name = 'valid_time_td'
         a2 = a2.transpose('hybrid', 'latitude', 'longitude')
 
         ## putting u, v, and pressure and 3D lat into a dataset
