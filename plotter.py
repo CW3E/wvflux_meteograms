@@ -236,7 +236,9 @@ def plot_time_height_meteograms(ds, varname, lat, lon, model_name, duration):
         ds = ds.transpose('hybrid', 'step')
         print('selecting x and y-axis values', flush=True)
         a = ds.valid_time
+        print(a.shape)
         b = ds.pressure
+        print(b.shape)
         a2, b2 = xr.broadcast(a, b)
         xs2 = a2
         # print(ds.valid_time_td.values.shape, flush=True)
