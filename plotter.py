@@ -214,15 +214,15 @@ def plot_time_height_meteograms(ds, varname, lat, lon, model_name, duration):
         time-height Meteogram figure
     
     '''
-    if (duration == 3):
-        ts = pd.timedelta_range(start='0 day', periods=25, freq='3H')
-        xtick_dur = 2
-    elif (duration == 7) & (model_name == 'ECMWF'):
+    if (duration == 7) & (model_name == 'ECMWF'):
         ts = pd.timedelta_range(start='0 day', periods=29, freq='6H')
         xtick_dur = 2
     elif (duration == 7) & (model_name == 'GFS'):
         ts = pd.timedelta_range(start='0 day', periods=57, freq='3H')
         xtick_dur = 4
+    else:
+        ts = pd.timedelta_range(start='0 day', periods=25, freq='3H')
+        xtick_dur = 2
     
     ## subset to current point and duration length
     ds = ds.sel(latitude=lat, longitude=lon, step=ts, method='nearest')
@@ -234,6 +234,8 @@ def plot_time_height_meteograms(ds, varname, lat, lon, model_name, duration):
         ds = ds.transpose('hybrid', 'step')
         xs2 = ds['3D_valid_time'].values
         ys = ds['pressure'].values
+    else:
+        print('Choose either GFS or ECMWF', flush=True)
         
     kw_ticks = {'length': 4, 'width': 0.5, 'pad': 2, 'color': 'black',
                 'labelsize': 10, 'labelcolor': 'dimgray'}
@@ -304,6 +306,8 @@ def plot_time_height_meteograms(ds, varname, lat, lon, model_name, duration):
         fname = fig_path + '{0}/{1}DayWVFlux_{2}_{3}'.format(model_name, duration, flat_lbl, flon_lbl)
     elif varname == 'r':
         fname = fig_path + '{0}/{1}DayRH_{2}_{3}'.format(model_name, duration, flat_lbl, flon_lbl)
+    else:
+        print('please choose either r or wvflux for varname', flush=True)
         
     
     fmt = 'png'
@@ -330,6 +334,8 @@ def plot_time_height_meteograms(ds, varname, lat, lon, model_name, duration):
         ylbl = u"WV Flux ({0}) | UV (knots) | T (0\N{DEGREE SIGN}C) | Pressure (hPa)".format(wvflux_units)
     elif varname == 'r':
         ylbl = u"RH ({0}) | UV (knots) | T (0\N{DEGREE SIGN}C) | Pressure (hPa)".format(rh_units)
+    else:
+        print('please choose either r or wvflux for varname', flush=True)
     
     plt.gca().invert_yaxis()
     ax.yaxis.set_label_position("left")
@@ -356,6 +362,8 @@ def plot_time_height_meteograms(ds, varname, lat, lon, model_name, duration):
         ax.barbs(xs2[::dw], ys[::dw], 
                  ds.u.values[::dw, ::dw]*1.944, ds.v.values[::dw, ::dw]*1.944, 
                  linewidth=0.75, length=5.5)
+    else:
+        print('Choose either GFS or ECMWF', flush=True)
 
     ## apply xtick parameters (day/hour)
     x_ticks = xtick_lst[0]
@@ -390,6 +398,8 @@ def plot_time_height_meteograms(ds, varname, lat, lon, model_name, duration):
         ax.set_ylabel('3-hr Precip (mm)', color='k')
     elif duration == 7:
         ax.set_ylabel('6-hr Precip (mm)', color='k')
+    else:
+        print('Choose either 3 or 7 for duration', flush=True)
 
     ax2 = ax.twinx()  # instantiate a second axes that shares the same x-axis
     ax2.plot(xs, ds.gh.values, color='#4876FF', linewidth=0.75)
@@ -429,7 +439,7 @@ def plot_time_height_meteograms(ds, varname, lat, lon, model_name, duration):
     prec_ann = 'Total Precip = {0:0.2f} mm'.format(prec_sum)
     if prec_sum < 100:
         xl = .80
-    elif prec_sum >= 100:
+    else:
         xl = .78
     ax.annotate(prec_ann, # this is the text
                 (xl, .91), # these are the coordinates to position the label
@@ -507,7 +517,7 @@ def plot_time_height_meteograms(ds, varname, lat, lon, model_name, duration):
     
     if ds.ivt.max().values >= 1000:
         xy1 = .77
-    elif ds.ivt.max().values < 1000:
+    else:
         xy1 = .78
 
     xy = [(.01, .91), (xy1, .91), (.01, .01)]
