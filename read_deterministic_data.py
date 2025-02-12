@@ -161,7 +161,7 @@ def read_ecmwf_S2D(filename, vardict, show_catalog=False):
     sfc_pressure = 2.71828**sfc_pressure_ds.lnsp.values
 
     #read the coefficient lookup table
-    coeff = pd.read_csv("utils/ecmwf_coeffs.txt",names=["A","B"],sep=" ")
+    coeff = pd.read_csv("/data/projects/operations/wvflux_meteograms/utils/ecmwf_coeffs.txt",names=["A","B"],sep=" ")
     coeffA = np.array(coeff["A"])[:, np.newaxis, np.newaxis]
     coeffB = np.array(coeff["B"])[:, np.newaxis, np.newaxis]
 
