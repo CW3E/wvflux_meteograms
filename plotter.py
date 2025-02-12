@@ -235,7 +235,12 @@ def plot_time_height_meteograms(ds, varname, lat, lon, model_name, duration):
     elif model_name == 'ECMWF':
         ds = ds.transpose('hybrid', 'step')
         print('selecting x and y-axis values', flush=True)
-        xs2 = ds.valid_time_td.values
+        a = ds.valid_time
+        b = ds.pressure
+        a2, b2 = xr.broadcast(a, b)
+        xs2 = a2
+        # print(ds.valid_time_td.values.shape, flush=True)
+        # xs2 = ds.valid_time_td.values
         ys = ds.pressure.values
         print('done selecting x and y-axis values', flush=True)
     else:
