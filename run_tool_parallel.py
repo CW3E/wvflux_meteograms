@@ -62,8 +62,8 @@ def multiP_preprocess_intermediate(model_name, F, fdate):
 if __name__ == '__main__':
     with Pool(processes=30) as pool:
         for F in F_lst:
-            # result = pool.apply_async(func=multiP_preprocess_intermediate,args=(model_name, F, fdate))
-            multiP_preprocess_intermediate(model_name, F, fdate)
+            result = pool.apply_async(func=multiP_preprocess_intermediate,args=(model_name, F, fdate))
+            # multiP_preprocess_intermediate(model_name, F, fdate)
         pool.close()
         pool.join()
     
