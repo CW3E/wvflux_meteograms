@@ -462,9 +462,15 @@ class load_ECMWF_datasets:
         a2, b2 = xr.broadcast(a, b)
         a2.name = 'valid_time_td'
         a2 = a2.transpose('hybrid', 'latitude', 'longitude')
+        
+        valid_time_3D = xr.DataArray(a2.values, name="valid_time_td", 
+                             dims=("hybrid", "latitude","longitude"), 
+                             coords={"hybrid": rh.hybrid.values, 
+                                     "latitude": rh.latitude.values, 
+                                     "longitude": rh.longitude.values})
 
         ## putting u, v, and pressure and 3D lat into a dataset
-        ds_lst = [ecmwf_s2d["v_wind"], ecmwf_s2d["u_wind"], wv_flux, ecmwf_s2d["pressure"], a2, rh, ecmwf_s2d["temperature"]]
+        ds_lst = [ecmwf_s2d["v_wind"], ecmwf_s2d["u_wind"], wv_flux, ecmwf_s2d["pressure"], rh, ecmwf_s2d["temperature"]]
         ds1 = xr.merge(ds_lst)
 
         ## build final dataset
