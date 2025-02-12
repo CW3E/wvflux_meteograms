@@ -235,8 +235,8 @@ def plot_time_height_meteograms(ds, varname, lat, lon, model_name, duration):
     elif model_name == 'ECMWF':
         ds = ds.transpose('hybrid', 'step')
         print('selecting x and y-axis values', flush=True)
-        xs2 = ds['3D_valid_time'].values
-        ys = ds['pressure'].values
+        xs2 = ds.valid_time_3D.values
+        ys = ds.pressure.values
         print('done selecting x and y-axis values', flush=True)
     else:
         print('Choose either GFS or ECMWF', flush=True)
