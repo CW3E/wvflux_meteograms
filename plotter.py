@@ -221,18 +221,14 @@ def plot_time_height_meteograms(ds, varname, lat, lon, model_name, duration):
     else:
         xtick_dur = 2
     
-    print('transposing data and getting x and y-axis values', flush=True)
     if model_name == 'GFS':
         ds = ds.transpose('isobaricInhPa', 'step')
         xs2 = ds.valid_time.values
         ys = ds.isobaricInhPa.values
     elif model_name == 'ECMWF':
         ds = ds.transpose('hybrid', 'step')
-        print('selecting x and y-axis values', flush=True)
-        print(ds.valid_time_td.values.shape, flush=True)
         xs2 = ds.valid_time_td.values
         ys = ds.pressure.values
-        print('done selecting x and y-axis values', flush=True)
     else:
         print('Choose either GFS or ECMWF', flush=True)
         
@@ -297,7 +293,6 @@ def plot_time_height_meteograms(ds, varname, lat, lon, model_name, duration):
     ## n-rows by n-columns
     gs = GridSpec(nrows, ncols, height_ratios=[2, 0.05, 1, 1], width_ratios = [1], wspace=0.06, hspace=0.1)
     ## use gs[rows index, columns index] to access grids
-    print('starting figure', flush=True)
     fig = plt.figure(figsize=(10., 14.))
     fig.dpi = current_dpi
     fig_path = '/data/projects/operations/wvflux_meteograms/figs/'

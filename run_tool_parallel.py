@@ -18,6 +18,9 @@ from calc_funcs import format_timedelta_to_HHMMSS
 from cw3e_tools import remove_tmp_data_files
 from plotter import plot_time_height_meteograms
 
+def debug_print(message): 
+    if(debugFlag == True) print(message, flush=True)
+
 def multiP_preprocess_intermediate(F):
     '''
     Prepares intermediate data
@@ -49,10 +52,12 @@ def subset_ds_func(ds, lat, lon, duration, model_name):
 
 def multiP_create_time_height_meteograms(argval):    
     subset_ds, lon, lat, varname, dur, model_name = argval
-    print('plotting {3}-day {2} at {0}N, {1}W'.format(lat, lon, varname, dur), flush=True)
+    debug_print('plotting {3}-day {2} at {0}N, {1}W'.format(lat, lon, varname, dur))
     plot_time_height_meteograms(subset_ds, varname, lat, 360-lon, model_name, dur)
-    print('finished plotting {3}-day {2} at {0}N, {1}W'.format(lat, lon, varname, dur), flush=True)
-    
+    debug_print('plotting {3}-day {2} at {0}N, {1}W'.format(lat, lon, varname, dur))
+
+debugFlag = True # set to False to remove most of the print statements
+
 if __name__ == '__main__':  
     model_name = sys.argv[1]
     fdate = sys.argv[2] ## set this to None to get most recently downloaded data    
@@ -83,11 +88,11 @@ if __name__ == '__main__':
     ############################################
     print('...preprocess intermediate data ...')
 
-    with mp.Pool(processes=30) as pool:
-        print("Via map with exception")
-        print("\tKicking off pool via map with exception", flush=True)
+    with mp.get_context('spawn').Pool(processes=30) as pool:
+        debug_print("Via map with exception")
+        debug_print("\tKicking off pool via map with exception")
         pool.map(multiP_preprocess_intermediate,F_lst)
-        print("\tKicked off pool via map with exception", flush=True)
+        debug_print("\tKicked off pool via map with exception")
         pool.close()
         pool.join()
 
@@ -161,10 +166,10 @@ if __name__ == '__main__':
     # mp.set_start_method('spawn', force=True)    
     # with mp.Pool(processes=16) as pool:
     with mp.get_context('spawn').Pool(processes=16) as pool:
-        print("Via map with exception")
-        print("\tKicking off pool via map with exception", flush=True)
+        debug_print("Via map with exception")
+        debug_print("\tKicking off pool via map with exception")
         pool.map(multiP_create_time_height_meteograms,final_arglst)
-        print("\tKicked off pool via map with exception", flush=True)
+        debug_print("\tKicked off pool via map with exception")
         pool.close()
         pool.join()
 
