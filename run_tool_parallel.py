@@ -155,9 +155,9 @@ print('...create plots ...')
 def multiP_create_time_height_meteograms(argval):    
     try:
         lon, lat, varname, dur = argval
-        print('plotting {3}-day {2} at {0}N, {1}W'.format(lat, lon, varname, duration), flush=True)
-        plot_time_height_meteograms(ds, varname, lat, 360-lon, model_name, duration)
-        print('finished plotting {3}-day {2} at {0}N, {1}W'.format(lat, lon, varname, duration), flush=True)
+        print('plotting {3}-day {2} at {0}N, {1}W'.format(lat, lon, varname, dur), flush=True)
+        plot_time_height_meteograms(ds, varname, lat, 360-lon, model_name, dur)
+        print('finished plotting {3}-day {2} at {0}N, {1}W'.format(lat, lon, varname, dur), flush=True)
     except Exception as e:
         print(f"Error processing {dur}-day {varname} at {lat}N, {lon}W: {e}")
         return None
