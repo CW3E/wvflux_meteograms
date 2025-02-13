@@ -53,10 +53,11 @@ def multiP_create_time_height_meteograms(argval):
     plot_time_height_meteograms(subset_ds, varname, lat, 360-lon, model_name, dur)
     print('finished plotting {3}-day {2} at {0}N, {1}W'.format(lat, lon, varname, dur), flush=True)
 
+model_name = sys.argv[1]
+fdate = sys.argv[2] ## set this to None to get most recently downloaded data
+    
 if __name__ == '__main__':  
     
-    model_name = sys.argv[1]
-    fdate = sys.argv[2] ## set this to None to get most recently downloaded data
     start_time = pd.Timestamp.today()
     print('Creating WV Flux Meteograms for {0}'.format(model_name))
 
