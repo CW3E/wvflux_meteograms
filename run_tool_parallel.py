@@ -46,7 +46,7 @@ remove_tmp_data_files(tmp_directory, pattern)
 ############################################
 print('...preprocess intermediate data ...')
 
-def multiP_preprocess_intermediate(model_name, F, fdate):
+def multiP_preprocess_intermediate(F):
     ##############################
     ### PREP INTERMEDIATE DATA ###
     ##############################
@@ -60,10 +60,12 @@ def multiP_preprocess_intermediate(model_name, F, fdate):
         model_data, tmp = s.calc_vars()
 
 if __name__ == '__main__':
+        
     with Pool(processes=30) as pool:
-        for F in F_lst:
-            result = pool.apply_async(func=multiP_preprocess_intermediate,args=(model_name, F, fdate))
-            # multiP_preprocess_intermediate(model_name, F, fdate)
+        print("Via map with exception")
+        print("\tKicking off pool via map with exception", flush=True)
+        pool.map(multiP_preprocess_intermediate,F_lst)
+        print("\tKicked off pool via map with exception", flush=True)
         pool.close()
         pool.join()
     
@@ -126,16 +128,53 @@ for i, x in enumerate(lon_lst):
                 
 final_arglst = arglst_USWEST + arglst_AK
 
-############################################
-### CREATE PLOTS USING POOL.APPLY_ASYNCH ###
-############################################
+###################################
+### CREATE PLOTS USING POOL.MAP ###
+###################################
     
+# print('...create plots ...')
+
+# def multiP_create_time_height_meteograms(argval):    
+#     lon, lat, varname, dur = argval
+#     print('plotting {3}-day {2} at {0}N, {1}W'.format(lat, lon, varname, dur), flush=True)
+#     plot_time_height_meteograms(ds, varname, lat, 360-lon, model_name, dur)
+#     print('finished plotting {3}-day {2} at {0}N, {1}W'.format(lat, lon, varname, dur), flush=True)
+
+# if __name__ == '__main__':
+        
+#     with Pool(processes=16) as pool:
+#         print("Via map with exception")
+#         print("\tKicking off pool via map with exception", flush=True)
+#         pool.map(multiP_create_time_height_meteograms,final_arglst)
+#         print("\tKicked off pool via map with exception", flush=True)
+#         pool.close()
+#         pool.join()
+        
+        
 print('...create plots ...')
+
+def subset_ds_func(ds, lat, lon, duration, model_name):
+    if (duration == 7) & (model_name == 'ECMWF'):
+        ts = pd.timedelta_range(start='0 day', periods=29, freq='6H')
+        xtick_dur = 2
+    elif (duration == 7) & (model_name == 'GFS'):
+        ts = pd.timedelta_range(start='0 day', periods=57, freq='3H')
+        xtick_dur = 4
+    else:
+        ts = pd.timedelta_range(start='0 day', periods=25, freq='3H')
+        xtick_dur = 2
+    
+    ## subset to current point and duration length
+    print('subsetting data to lat, lon, and time', flush=True)
+    ds = ds.sel(latitude=lat, longitude=lon, step=ts, method='nearest')
+    
+    return ds
 
 def multiP_create_time_height_meteograms(argval):    
     lon, lat, varname, dur = argval
+    subset_ds = subset_ds_func(ds, lat, lon, dur, model_name)
     print('plotting {3}-day {2} at {0}N, {1}W'.format(lat, lon, varname, dur), flush=True)
-    plot_time_height_meteograms(ds, varname, lat, 360-lon, model_name, dur)
+    plot_time_height_meteograms(subset_ds, varname, lat, 360-lon, model_name, dur)
     print('finished plotting {3}-day {2} at {0}N, {1}W'.format(lat, lon, varname, dur), flush=True)
 
 if __name__ == '__main__':
