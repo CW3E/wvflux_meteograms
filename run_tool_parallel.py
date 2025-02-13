@@ -19,7 +19,8 @@ from cw3e_tools import remove_tmp_data_files
 from plotter import plot_time_height_meteograms
 
 def debug_print(message): 
-    if(debugFlag == True) print(message, flush=True)
+    if(debugFlag == True):
+        print(message, flush=True)
 
 def multiP_preprocess_intermediate(F):
     '''
