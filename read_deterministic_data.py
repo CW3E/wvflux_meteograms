@@ -350,7 +350,7 @@ class load_GFS_datasets:
         ds.to_netcdf(path=out_fname, mode = 'w', format='NETCDF4')
         ds.close() ## close data
 
-        return ds
+        return None
     
 class load_ECMWF_datasets:
     '''
@@ -500,4 +500,4 @@ class load_ECMWF_datasets:
         model_data.to_netcdf(path=out_fname, mode = 'w', format='NETCDF4')
         model_data.close() ## close data
         
-        return model_data
+        return None

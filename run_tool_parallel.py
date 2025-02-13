@@ -29,11 +29,13 @@ def multiP_preprocess_intermediate(F):
     print('... Loading data for {0} hour lead'.format(F))
     if model_name == 'ECMWF':
         s = load_ECMWF_datasets(F=F, fdate=fdate)
-        model_data = s.calc_vars()
+        s.calc_vars()
 
     elif model_name == 'GFS':
         s = load_GFS_datasets(F=F, fdate=fdate)
-        model_data, tmp = s.calc_vars()
+        s.calc_vars()
+        
+    return None
         
 def subset_ds_func(ds, lat, lon, duration, model_name):
     if (duration == 7) & (model_name == 'ECMWF'):
