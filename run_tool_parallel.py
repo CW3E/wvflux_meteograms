@@ -54,11 +54,12 @@ def multiP_create_time_height_meteograms(argval):
     subset_ds, lon, lat, varname, dur, model_name = argval
     debug_print('plotting {3}-day {2} at {0}N, {1}W'.format(lat, lon, varname, dur))
     plot_time_height_meteograms(subset_ds, varname, lat, 360-lon, model_name, dur)
-    debug_print('plotting {3}-day {2} at {0}N, {1}W'.format(lat, lon, varname, dur))
+    debug_print('finished plotting {3}-day {2} at {0}N, {1}W'.format(lat, lon, varname, dur))
 
 debugFlag = True # set to False to remove most of the print statements
 
-if __name__ == '__main__':  
+if __name__ == '__main__':
+    sys.argv.append(str(None)) ## add this in case date not specified in command line
     model_name = sys.argv[1]
     fdate = sys.argv[2] ## set this to None to get most recently downloaded data    
     
