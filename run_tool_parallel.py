@@ -48,7 +48,6 @@ def subset_ds_func(ds, lat, lon, duration, model_name):
     
     ## subset to current point and duration length
     ds = ds.sel(latitude=lat, longitude=lon, step=ts, method='nearest')
-    ds = ds.load()
     return ds
 
 def multiP_create_time_height_meteograms(argval):    
@@ -166,7 +165,7 @@ if __name__ == '__main__':
 
     # mp.set_start_method('spawn', force=True)    
     # with mp.Pool(processes=16) as pool:
-    with mp.get_context('spawn').Pool(processes=16) as pool:
+    with mp.get_context('spawn').Pool(processes=30) as pool:
         debug_print("Via map with exception")
         debug_print("\tKicking off pool via map with exception")
         pool.map(multiP_create_time_height_meteograms,final_arglst)
