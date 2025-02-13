@@ -104,55 +104,6 @@ ds = ds.load()
 ###############################################
 ### CREATE ARGUMENT LIST FOR CREATING PLOTS ###
 ###############################################
-
-lat_lst = np.arange(26, 51, 1)
-lon_lst = np.arange(111, 128, 1)
-var_lst = ['r', 'wvflux']
-dur_lst = [7]
-
-arglst_USWEST = []
-for i, x in enumerate(lon_lst):
-    for j, y in enumerate(lat_lst):
-        for k, varname in enumerate(var_lst):
-            for l, dur in enumerate(dur_lst):
-                arglst_USWEST.append((x,y, varname, dur))
-
-lat_lst = np.arange(51, 70, 1)
-lon_lst = np.arange(130, 175, 1)               
-arglst_AK = []
-for i, x in enumerate(lon_lst):
-    for j, y in enumerate(lat_lst):
-        for k, varname in enumerate(var_lst):
-            for l, dur in enumerate(dur_lst):
-                arglst_AK.append((x,y, varname, dur))
-                
-final_arglst = arglst_USWEST + arglst_AK
-
-###################################
-### CREATE PLOTS USING POOL.MAP ###
-###################################
-    
-# print('...create plots ...')
-
-# def multiP_create_time_height_meteograms(argval):    
-#     lon, lat, varname, dur = argval
-#     print('plotting {3}-day {2} at {0}N, {1}W'.format(lat, lon, varname, dur), flush=True)
-#     plot_time_height_meteograms(ds, varname, lat, 360-lon, model_name, dur)
-#     print('finished plotting {3}-day {2} at {0}N, {1}W'.format(lat, lon, varname, dur), flush=True)
-
-# if __name__ == '__main__':
-        
-#     with Pool(processes=16) as pool:
-#         print("Via map with exception")
-#         print("\tKicking off pool via map with exception", flush=True)
-#         pool.map(multiP_create_time_height_meteograms,final_arglst)
-#         print("\tKicked off pool via map with exception", flush=True)
-#         pool.close()
-#         pool.join()
-        
-        
-print('...create plots ...')
-
 def subset_ds_func(ds, lat, lon, duration, model_name):
     if (duration == 7) & (model_name == 'ECMWF'):
         ts = pd.timedelta_range(start='0 day', periods=29, freq='6H')
@@ -165,16 +116,45 @@ def subset_ds_func(ds, lat, lon, duration, model_name):
         xtick_dur = 2
     
     ## subset to current point and duration length
-    print('subsetting data to lat, lon, and time', flush=True)
     ds = ds.sel(latitude=lat, longitude=lon, step=ts, method='nearest')
     
     return ds
 
+lat_lst = np.arange(26, 51, 1)
+lon_lst = np.arange(111, 128, 1)
+var_lst = ['r', 'wvflux']
+dur_lst = [7, 3]
+
+arglst_USWEST = []
+for i, x in enumerate(lon_lst):
+    for j, y in enumerate(lat_lst):
+        for k, varname in enumerate(var_lst):
+            for l, dur in enumerate(dur_lst):
+                subset_ds = subset_ds_func(ds, y, x, dur, model_name)
+                arglst_USWEST.append((subset_ds, x,y, varname, dur))
+
+lat_lst = np.arange(51, 70, 1)
+lon_lst = np.arange(130, 175, 1)               
+arglst_AK = []
+for i, x in enumerate(lon_lst):
+    for j, y in enumerate(lat_lst):
+        for k, varname in enumerate(var_lst):
+            for l, dur in enumerate(dur_lst):
+                subset_ds = subset_ds_func(ds, y, x, dur, model_name)
+                arglst_AK.append((subset_ds, x,y, varname, dur))
+                
+final_arglst = arglst_USWEST + arglst_AK
+
+###################################
+### CREATE PLOTS USING POOL.MAP ###
+###################################
+    
+print('...create plots ...')
+
 def multiP_create_time_height_meteograms(argval):    
-    lon, lat, varname, dur = argval
-    subset_ds = subset_ds_func(ds, lat, lon, dur, model_name)
+    ds, lon, lat, varname, dur = argval
     print('plotting {3}-day {2} at {0}N, {1}W'.format(lat, lon, varname, dur), flush=True)
-    plot_time_height_meteograms(subset_ds, varname, lat, 360-lon, model_name, dur)
+    plot_time_height_meteograms(ds, varname, lat, 360-lon, model_name, dur)
     print('finished plotting {3}-day {2} at {0}N, {1}W'.format(lat, lon, varname, dur), flush=True)
 
 if __name__ == '__main__':
@@ -186,6 +166,7 @@ if __name__ == '__main__':
         print("\tKicked off pool via map with exception", flush=True)
         pool.close()
         pool.join()
+        
 
 end_time = pd.Timestamp.today()
 td = end_time - start_time
