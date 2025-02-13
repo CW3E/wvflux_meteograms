@@ -61,7 +61,7 @@ def multiP_create_time_height_meteograms(argval):
 debugFlag = True # set to False to remove most of the print statements
 
 if __name__ == '__main__':
-    sys.argv.append(str(None)) ## add this in case date not specified in command line
+    sys.argv.append(None) ## add this in case date not specified in command line
     model_name = sys.argv[1]
     fdate = sys.argv[2] ## set this to None to get most recently downloaded data    
     
