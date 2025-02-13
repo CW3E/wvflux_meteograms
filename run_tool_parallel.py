@@ -60,7 +60,7 @@ def multiP_preprocess_intermediate(F):
         model_data, tmp = s.calc_vars()
 
 if __name__ == '__main__':
-        
+    mp.set_start_method('spawn')     
     with mp.Pool(processes=30) as pool:
         print("Via map with exception")
         print("\tKicking off pool via map with exception", flush=True)
