@@ -127,28 +127,6 @@ final_arglst = arglst_USWEST + arglst_AK
 ############################################
 ### CREATE PLOTS USING POOL.APPLY_ASYNCH ###
 ############################################
-print('...create plots ...')
-
-def multiP_create_time_height_meteograms(argval):    
-    try:
-        print(argval, flush=True)
-        lon, lat, varname, dur = argval
-        print('plotting {3}-day {2} at {0}N, {1}W'.format(lat, lon, varname, duration), flush=True)
-        plot_time_height_meteograms(ds, varname, lat, 360-lon, model_name, duration)
-        print('finished plotting {3}-day {2} at {0}N, {1}W'.format(lat, lon, varname, duration), flush=True)
-    except Exception as e:
-        print(f"Error processing {dur}-day {varname} at {lat}N, {lon}W: {e}")
-        return None
-
-if __name__ == '__main__':
-    with Pool(processes=16) as pool:
-        for argval in final_arglst:
-            print('kicked off', argval, flush=True)
-            pool.map(multiP_create_time_height_meteograms,argval)
-            print('after kick off', argval, flush=True)
-        pool.close()
-        pool.join()
-    
     
 print('...create plots ...')
 
