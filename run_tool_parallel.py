@@ -48,15 +48,14 @@ def subset_ds_func(ds, lat, lon, duration, model_name):
     return ds
 
 def multiP_create_time_height_meteograms(argval):    
-    subset_ds, lon, lat, varname, dur = argval
+    subset_ds, lon, lat, varname, dur, model_name = argval
     print('plotting {3}-day {2} at {0}N, {1}W'.format(lat, lon, varname, dur), flush=True)
     plot_time_height_meteograms(subset_ds, varname, lat, 360-lon, model_name, dur)
     print('finished plotting {3}-day {2} at {0}N, {1}W'.format(lat, lon, varname, dur), flush=True)
-
-model_name = sys.argv[1]
-fdate = sys.argv[2] ## set this to None to get most recently downloaded data
     
 if __name__ == '__main__':  
+    model_name = sys.argv[1]
+    fdate = sys.argv[2] ## set this to None to get most recently downloaded data    
     
     start_time = pd.Timestamp.today()
     print('Creating WV Flux Meteograms for {0}'.format(model_name))
@@ -137,7 +136,7 @@ if __name__ == '__main__':
             for k, varname in enumerate(var_lst):
                 for l, dur in enumerate(dur_lst):
                     subset_ds = subset_ds_func(ds, y, x, dur, model_name)
-                    arglst_USWEST.append((subset_ds, x,y, varname, dur))
+                    arglst_USWEST.append((subset_ds, x,y, varname, dur, model_name))
 
     lat_lst = np.arange(51, 70, 1)
     lon_lst = np.arange(130, 175, 1)               
@@ -147,7 +146,7 @@ if __name__ == '__main__':
             for k, varname in enumerate(var_lst):
                 for l, dur in enumerate(dur_lst):
                     subset_ds = subset_ds_func(ds, y, x, dur, model_name)
-                    arglst_AK.append((subset_ds, x,y, varname, dur))
+                    arglst_AK.append((subset_ds, x,y, varname, dur, model_name))
 
     final_arglst = arglst_USWEST + arglst_AK
 
