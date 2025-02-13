@@ -214,19 +214,13 @@ def plot_time_height_meteograms(ds, varname, lat, lon, model_name, duration):
         time-height Meteogram figure
     
     '''
-#     if (duration == 7) & (model_name == 'ECMWF'):
-#         ts = pd.timedelta_range(start='0 day', periods=29, freq='6H')
-#         xtick_dur = 2
-#     elif (duration == 7) & (model_name == 'GFS'):
-#         ts = pd.timedelta_range(start='0 day', periods=57, freq='3H')
-#         xtick_dur = 4
-#     else:
-#         ts = pd.timedelta_range(start='0 day', periods=25, freq='3H')
-#         xtick_dur = 2
+    if (duration == 7) & (model_name == 'ECMWF'):
+        xtick_dur = 2
+    elif (duration == 7) & (model_name == 'GFS'):
+        xtick_dur = 4
+    else:
+        xtick_dur = 2
     
-#     ## subset to current point and duration length
-#     print('subsetting data to lat, lon, and time', flush=True)
-#     ds = ds.sel(latitude=lat, longitude=lon, step=ts, method='nearest')
     print('transposing data and getting x and y-axis values', flush=True)
     if model_name == 'GFS':
         ds = ds.transpose('isobaricInhPa', 'step')
