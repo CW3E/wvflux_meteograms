@@ -11,7 +11,7 @@ import pandas as pd
 from datetime import datetime
 import netCDF4
 import xarray as xr
-from multiprocessing import Pool
+import multiprocessing as mp
 
 from read_deterministic_data import load_GFS_datasets, load_ECMWF_datasets, read_preprocessed_IVT_data
 from calc_funcs import format_timedelta_to_HHMMSS
@@ -61,7 +61,7 @@ def multiP_preprocess_intermediate(F):
 
 if __name__ == '__main__':
         
-    with Pool(processes=30) as pool:
+    with mp.Pool(processes=30) as pool:
         print("Via map with exception")
         print("\tKicking off pool via map with exception", flush=True)
         pool.map(multiP_preprocess_intermediate,F_lst)
@@ -158,7 +158,7 @@ def multiP_create_time_height_meteograms(argval):
     print('finished plotting {3}-day {2} at {0}N, {1}W'.format(lat, lon, varname, dur), flush=True)
 
 if __name__ == '__main__':
-        
+    mp.set_start_method('spawn')    
     with Pool(processes=16) as pool:
         print("Via map with exception")
         print("\tKicking off pool via map with exception", flush=True)
