@@ -158,7 +158,7 @@ def multiP_create_time_height_meteograms(argval):
 
 if __name__ == '__main__':
     mp.set_start_method('spawn', force=True)    
-    with Pool(processes=16) as pool:
+    with mp.Pool(processes=16) as pool:
         print("Via map with exception")
         print("\tKicking off pool via map with exception", flush=True)
         pool.map(multiP_create_time_height_meteograms,final_arglst)
