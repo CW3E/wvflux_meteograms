@@ -124,12 +124,13 @@ for i, x in enumerate(lon_lst):
                 
 final_arglst = arglst_USWEST + arglst_AK
 
-####################
-### CREATE PLOTS ###
-####################
+############################################
+### CREATE PLOTS USING POOL.APPLY_ASYNCH ###
+############################################
 print('...create plots ...')
 
-def multiP_create_time_height_meteograms(ds, varname, lat, lon, model_name, duration):
+def multiP_create_time_height_meteograms(argval):
+    lon, lat, varname, dur = argval
     try:
         print('plotting {3}-day {2} at {0}N, {1}W'.format(lat, lon, varname, duration), flush=True)
         plot_time_height_meteograms(ds, varname, lat, 360-lon, model_name, duration)
@@ -141,13 +142,12 @@ def multiP_create_time_height_meteograms(ds, varname, lat, lon, model_name, dura
 if __name__ == '__main__':
     with Pool(processes=16) as pool:
         for argval in final_arglst:
-            lon, lat, varname, dur = argval
             print('kicked off', argval, flush=True)
-            result = pool.starmap(func=multiP_create_time_height_meteograms,args=(ds, varname, lat, lon, model_name, dur))
-            # multiP_create_time_height_meteograms(ds, varname, lat, lon, model_name, dur)
+            pool.map(multiP_create_time_height_meteograms,argval)
             print('after kick off', argval, flush=True)
         pool.close()
         pool.join()
+    
 
 end_time = pd.Timestamp.today()
 td = end_time - start_time
