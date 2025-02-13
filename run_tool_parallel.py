@@ -130,6 +130,7 @@ final_arglst = arglst_USWEST + arglst_AK
 print('...create plots ...')
 
 def multiP_create_time_height_meteograms(argval):
+    print(argval, flush=True)
     lon, lat, varname, dur = argval
     try:
         print('plotting {3}-day {2} at {0}N, {1}W'.format(lat, lon, varname, duration), flush=True)
