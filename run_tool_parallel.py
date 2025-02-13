@@ -59,8 +59,7 @@ def multiP_preprocess_intermediate(F):
         s = load_GFS_datasets(F=F, fdate=fdate)
         model_data, tmp = s.calc_vars()
 
-if __name__ == '__main__':
-    mp.set_start_method('spawn')     
+if __name__ == '__main__':    
     with mp.Pool(processes=30) as pool:
         print("Via map with exception")
         print("\tKicking off pool via map with exception", flush=True)
@@ -158,7 +157,7 @@ def multiP_create_time_height_meteograms(argval):
     print('finished plotting {3}-day {2} at {0}N, {1}W'.format(lat, lon, varname, dur), flush=True)
 
 if __name__ == '__main__':
-    mp.set_start_method('spawn')    
+    mp.set_start_method('spawn', force=True)    
     with Pool(processes=16) as pool:
         print("Via map with exception")
         print("\tKicking off pool via map with exception", flush=True)
