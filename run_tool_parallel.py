@@ -96,6 +96,8 @@ if model_name == 'GFS':
     
 ivt = read_preprocessed_IVT_data(model=model_name, F_lst=F_lst, fdate=pd.to_datetime(ds.time.values).strftime('%Y%m%d%H'))
 ds = ds.assign(ivt=(['step','latitude','longitude'],ivt.ivt.values))
+## load ds into memory
+ds = ds.load()
 
 ###############################################
 ### CREATE ARGUMENT LIST FOR CREATING PLOTS ###
