@@ -129,10 +129,10 @@ final_arglst = arglst_USWEST + arglst_AK
 ############################################
 print('...create plots ...')
 
-def multiP_create_time_height_meteograms(argval):
-    print(argval, flush=True)
-    lon, lat, varname, dur = argval
+def multiP_create_time_height_meteograms(argval):    
     try:
+        print(argval, flush=True)
+        lon, lat, varname, dur = argval
         print('plotting {3}-day {2} at {0}N, {1}W'.format(lat, lon, varname, duration), flush=True)
         plot_time_height_meteograms(ds, varname, lat, 360-lon, model_name, duration)
         print('finished plotting {3}-day {2} at {0}N, {1}W'.format(lat, lon, varname, duration), flush=True)
@@ -149,6 +149,28 @@ if __name__ == '__main__':
         pool.close()
         pool.join()
     
+    
+print('...create plots ...')
+
+def multiP_create_time_height_meteograms(argval):    
+    try:
+        lon, lat, varname, dur = argval
+        print('plotting {3}-day {2} at {0}N, {1}W'.format(lat, lon, varname, duration), flush=True)
+        plot_time_height_meteograms(ds, varname, lat, 360-lon, model_name, duration)
+        print('finished plotting {3}-day {2} at {0}N, {1}W'.format(lat, lon, varname, duration), flush=True)
+    except Exception as e:
+        print(f"Error processing {dur}-day {varname} at {lat}N, {lon}W: {e}")
+        return None
+
+if __name__ == '__main__':
+        
+    with Pool(processes=16) as pool:
+        print("Via map with exception")
+        print("\tKicking off pool via map with exception", flush=True)
+        pool.map(multiP_create_time_height_meteograms,final_arglst)
+        print("\tKicked off pool via map with exception", flush=True)
+        pool.close()
+        pool.join()
 
 end_time = pd.Timestamp.today()
 td = end_time - start_time
