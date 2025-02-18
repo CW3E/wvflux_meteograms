@@ -289,7 +289,7 @@ class load_GFS_datasets:
         fname = '{0}_F{1}.grb2'.format(self.date_string, str(self.F).zfill(3))
         
         self.fname = self.fpath+fname
-
+        print(self.fname)
     def calc_vars(self):
         ## dictionary of variables we need for the cross section
         gfs_vardict = {

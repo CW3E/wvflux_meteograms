@@ -280,7 +280,7 @@ def plot_time_height_meteograms(ds, varname, lat, lon, model_name, duration):
              .groupby(grp) \
              .apply(lambda x: [x.index.min(), x.index.max()])
 
-    current_dpi=600 #recommended dpi of 600
+    current_dpi=300 #recommended dpi of 600
     base_dpi=100
     scaling_factor = (current_dpi / base_dpi)**0.2
 
@@ -297,9 +297,9 @@ def plot_time_height_meteograms(ds, varname, lat, lon, model_name, duration):
     fig.dpi = current_dpi
     fig_path = '/data/projects/operations/wvflux_meteograms/figs/'
     if varname == 'wvflux':
-        fname = fig_path + '{0}/{1}DayWVFlux_{2}_{3}'.format(model_name, duration, flat_lbl, flon_lbl)
+        fname = fig_path + '{0}/{0}_{1}DayWVFlux_{2}_{3}'.format(model_name, duration, flat_lbl, flon_lbl)
     elif varname == 'r':
-        fname = fig_path + '{0}/{1}DayRH_{2}_{3}'.format(model_name, duration, flat_lbl, flon_lbl)
+        fname = fig_path + '{0}/{0}_{1}DayRH_{2}_{3}'.format(model_name, duration, flat_lbl, flon_lbl)
     else:
         print('please choose either r or wvflux for varname', flush=True)
         
