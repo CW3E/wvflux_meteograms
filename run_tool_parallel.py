@@ -50,7 +50,7 @@ def subset_ds_func(ds, lat, lon, duration, model_name):
     
     ## subset to current point and duration length
     print(ds)
-    ds = ds.sel(latitude=lat, longitude=lon, step=ts, method='nearest')
+    ds = ds.sel(latitude=lat, longitude=360-lon, step=ts, method='nearest')
     return ds
 
 def multiP_create_time_height_meteograms(argval):    
