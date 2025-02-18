@@ -500,22 +500,30 @@ def plot_time_height_meteograms(ds, varname, lat, lon, model_name, duration):
         
         ## sum up precipitation during AR conditions
         prec = ds.tp.isel(step=slice(arr.iloc[i][0], arr.iloc[i][1])).values
-        prec_AR.append(np.nansum(prec))
+        # prec_AR.append(np.nansum(prec))
+        prec = np.nansum(prec)
+        prec_ann = 'Precip = {0:0.1f} mm'.format(prec)
+        ## plot precipitation annotation when there are AR events
+        ax.annotate(prec_ann, # this is the text
+                    (xs[arr.iloc[i][0]], 0.01), # these are the coordinates to position the label
+                    xycoords='data',
+                    zorder=200,
+                    **style)
+        
     AR_duration = sum(AR_duration)
-    prec_AR = sum(prec_AR)
+    # prec_AR = sum(prec_AR) ## instead of summing, keep as individual events
 
     ## add in annotation of max IWV and IVT vals
     IVT_IWV_ann = 'Max IVT/IWV = {0:0.0f} {1} / {2:0.0f} mm'.format(ds.ivt.max().values, ivt_units, ds.pwat.max().values)
     AR_ann = 'AR Conditions = {0} hours'.format(int(AR_duration))
-    prec_ann = 'Precip = {0:0.1f} mm'.format(prec_AR)
+    
     
     if ds.ivt.max().values >= 1000:
         xy1 = .77
     else:
         xy1 = .78
-
-    xy = [(.01, .91), (xy1, .91), (.01, .01)]
-    for i, lbl in enumerate([IVT_IWV_ann, AR_ann, prec_ann]):
+    xy = [(.01, .91), (xy1, .91)]
+    for i, lbl in enumerate([IVT_IWV_ann, AR_ann]):
         ax.annotate(lbl, # this is the text
                     xy[i], # these are the coordinates to position the label
                     xycoords='axes fraction',
