@@ -509,6 +509,7 @@ def plot_time_height_meteograms(ds, varname, lat, lon, model_name, duration):
             ax.annotate(prec_ann, # this is the text
                         (midway, 0.01), # these are the coordinates to position the label
                         xycoords='data',
+                        ha='center',
                         zorder=200,
                         **style)
         
