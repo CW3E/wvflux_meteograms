@@ -496,19 +496,21 @@ def plot_time_height_meteograms(ds, varname, lat, lon, model_name, duration):
     for i in range(len(arr)):
         AR_dur = xs[arr.iloc[i][1]] - xs[arr.iloc[i][0]]
         AR_duration.append(AR_dur / np.timedelta64(1, 'h'))
+        midway = (AR_dur / np.timedelta64(1, 'h')) + xs[arr.iloc[i][0]]
         ax.axvspan(xs[arr.iloc[i][0]], xs[arr.iloc[i][1]], color='grey', alpha=0.2, lw=None)
         
         ## sum up precipitation during AR conditions
         prec = ds.tp.isel(step=slice(arr.iloc[i][0], arr.iloc[i][1])).values
         # prec_AR.append(np.nansum(prec))
         prec = np.nansum(prec)
-        prec_ann = 'Precip = {0:0.1f} mm'.format(prec)
-        ## plot precipitation annotation when there are AR events
-        ax.annotate(prec_ann, # this is the text
-                    (xs[arr.iloc[i][0]], 0.01), # these are the coordinates to position the label
-                    xycoords='data',
-                    zorder=200,
-                    **style)
+        if prec > 1:
+            prec_ann = 'Precip = {0:0.1f} mm'.format(prec)
+            ## plot precipitation annotation when there are AR events
+            ax.annotate(prec_ann, # this is the text
+                        (midway, 0.01), # these are the coordinates to position the label
+                        xycoords='data',
+                        zorder=200,
+                        **style)
         
     AR_duration = sum(AR_duration)
     # prec_AR = sum(prec_AR) ## instead of summing, keep as individual events

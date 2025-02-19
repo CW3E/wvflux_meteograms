@@ -49,7 +49,6 @@ def subset_ds_func(ds, lat, lon, duration, model_name):
         xtick_dur = 2
     
     ## subset to current point and duration length
-    print(ds)
     ds = ds.sel(latitude=lat, longitude=360-lon, step=ts, method='nearest')
     return ds
 
