@@ -27,6 +27,7 @@ from matplotlib.gridspec import GridSpec
 import itertools
 from PIL import Image
 from matplotlib import font_manager as fm
+import matplotlib.ticker as ticker
 from matplotlib.ticker import FuncFormatter
 from matplotlib.ticker import MaxNLocator
 from scipy.ndimage import gaussian_filter
@@ -276,11 +277,12 @@ def plot_time_height_meteograms(ds, varname, lat, lon, model_name, duration):
     idx = (ds.ivt >=250) & (ds.pwat >=20.)
     s = pd.Series(xr.where(idx, True, False))
     grp = s.eq(False).cumsum()
+    # shade +/- 1.5 hours from the valid time of AR conditions
     arr = grp.loc[s.eq(True)] \
              .groupby(grp) \
-             .apply(lambda x: [x.index.min(), x.index.max()])
+             .apply(lambda x: [x.index.min() - timedelta(hours=1.5), x.index.max() + timedelta(hours=1.5)])
 
-    current_dpi=300 #recommended dpi of 600
+    current_dpi=300
     base_dpi=100
     scaling_factor = (current_dpi / base_dpi)**0.2
 
@@ -407,6 +409,8 @@ def plot_time_height_meteograms(ds, varname, lat, lon, model_name, duration):
     x_labels = xlbl_lst[0]
     ax.set_xticks(x_ticks[::xtick_dur]) # set the labels every x time steps
     ax.set_xticklabels(x_labels[::xtick_dur])
+    # Set the minor ticks using FixedLocator
+    ax.xaxis.set_minor_locator(ticker.FixedLocator(x_ticks))
     ax.minorticks_on()
     ax.tick_params(axis='x', which='minor', bottom=True)
     ax.tick_params(axis='x', which='major')
@@ -486,6 +490,8 @@ def plot_time_height_meteograms(ds, varname, lat, lon, model_name, duration):
     x_labels = xlbl_lst[0]
     ax.set_xticks(x_ticks[::xtick_dur]) # set the labels every x time steps
     ax.set_xticklabels(x_labels[::xtick_dur])
+    # Set the minor ticks using FixedLocator
+    ax.xaxis.set_minor_locator(ticker.FixedLocator(x_ticks))
     ax.minorticks_on()
     ax.tick_params(axis='x', which='minor', bottom=True)
     ax.tick_params(axis='x', which='major')
@@ -507,7 +513,7 @@ def plot_time_height_meteograms(ds, varname, lat, lon, model_name, duration):
             prec_ann = 'Precip = {0:0.1f} mm'.format(prec)
             ## plot precipitation annotation when there are AR events
             ax.annotate(prec_ann, # this is the text
-                        (midway, 0.01), # these are the coordinates to position the label
+                        (midway, 0.02), # these are the coordinates to position the label
                         xycoords='data',
                         ha='center',
                         zorder=200,
