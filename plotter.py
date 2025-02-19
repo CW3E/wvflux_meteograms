@@ -496,7 +496,7 @@ def plot_time_height_meteograms(ds, varname, lat, lon, model_name, duration):
     for i in range(len(arr)):
         AR_dur = xs[arr.iloc[i][1]] - xs[arr.iloc[i][0]]
         AR_duration.append(AR_dur / np.timedelta64(1, 'h'))
-        midway = (AR_dur / np.timedelta64(1, 'h')) + xs[arr.iloc[i][0]]
+        midway = (AR_dur / 2) + xs[arr.iloc[i][0]]
         ax.axvspan(xs[arr.iloc[i][0]], xs[arr.iloc[i][1]], color='grey', alpha=0.2, lw=None)
         
         ## sum up precipitation during AR conditions
