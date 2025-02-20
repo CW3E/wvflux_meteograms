@@ -501,12 +501,11 @@ def plot_time_height_meteograms(ds, varname, lat, lon, model_name, duration):
     prec_AR = []
     for i in range(len(arr)):
         if duration == 3:
-            print(xs[arr.iloc[i][0]])
-            start = xs[arr.iloc[i][0]] - timedelta(hours=1.5)
-            stop = xs[arr.iloc[i][1]] + timedelta(hours=1.5)
+            start = xs[arr.iloc[i][0]] - np.timedelta64(5400, 's')
+            stop = xs[arr.iloc[i][1]] + np.timedelta64(5400, 's')
         else:
-            start = xs[arr.iloc[i][0]] - timedelta(hours=3)
-            stop = xs[arr.iloc[i][1]] + timedelta(hours=3)
+            start = xs[arr.iloc[i][0]] - np.timedelta64(21600, 's')
+            stop = xs[arr.iloc[i][1]] + np.timedelta64(21600, 's')
         AR_dur = stop - start
         AR_duration.append(AR_dur / np.timedelta64(1, 'h'))
         midway = (AR_dur / 2) + start
