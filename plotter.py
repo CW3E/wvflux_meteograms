@@ -507,15 +507,15 @@ def plot_time_height_meteograms(ds, varname, lat, lon, model_name, duration):
         else:
             start = xs[arr.iloc[i][0]] - np.timedelta64(21600, 's')
             stop = xs[arr.iloc[i][1]] + np.timedelta64(21600, 's')
-        AR_dur = (stop - start) / np.timedelta64(1, 'h')
-        AR_duration.append(AR_dur)
+        AR_dur = stop - start 
+        AR_duration.append(AR_dur / np.timedelta64(1, 'h'))
         midway = (AR_dur / 2) + start
         ax.axvspan(start, stop, color='grey', alpha=0.2, lw=None)
         
         ## sum up precipitation during AR conditions
         prec = ds.tp.isel(step=slice(arr.iloc[i][0]-1, arr.iloc[i][1]+1)).values
         prec = np.nansum(prec)
-        if (prec > 1) & (AR_dur > 6):
+        if (prec > 1):
             prec_ann = 'Precip = {0:0.1f} mm'.format(prec)
             ## plot precipitation annotation when there are AR events
             ax.annotate(prec_ann, # this is the text
