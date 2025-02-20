@@ -500,7 +500,7 @@ def plot_time_height_meteograms(ds, varname, lat, lon, model_name, duration):
     AR_duration = []
     prec_AR = []
     for i in range(len(arr)):
-        if dur == 3:
+        if duration == 3:
             start = xs[arr.iloc[i][0]] - timedelta(hours=1.5)
             stop = xs[arr.iloc[i][1]] + timedelta(hours=1.5)
         else:
