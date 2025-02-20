@@ -410,7 +410,7 @@ def plot_time_height_meteograms(ds, varname, lat, lon, model_name, duration):
     ax.set_xticks(x_ticks[::xtick_dur]) # set the labels every x time steps
     ax.set_xticklabels(x_labels[::xtick_dur])
     # Set the minor ticks using FixedLocator
-    ax.set_minor_locator(ax.xaxis, HourLocator(range(0, 25, 3)))
+    ax.xaxis.set_minor_locator(HourLocator(range(0, 25, 3)))
     # ax.xaxis.set_minor_locator(ticker.FixedLocator(x_ticks))
     # ax.minorticks_on()
     ax.tick_params(axis='x', which='minor', bottom=True)
@@ -492,7 +492,7 @@ def plot_time_height_meteograms(ds, varname, lat, lon, model_name, duration):
     ax.set_xticks(x_ticks[::xtick_dur]) # set the labels every x time steps
     ax.set_xticklabels(x_labels[::xtick_dur])
     # Set the minor ticks using FixedLocator
-    ax.set_minor_locator(ax.xaxis, HourLocator(range(0, 25, 3)))  
+    ax.xaxis.set_minor_locator(HourLocator(range(0, 25, 3)))  
     # ax.xaxis.set_minor_locator(ticker.FixedLocator(x_ticks))
     # ax.minorticks_on()
     ax.tick_params(axis='x', which='minor', bottom=True)
