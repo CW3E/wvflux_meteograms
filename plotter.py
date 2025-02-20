@@ -316,7 +316,7 @@ def plot_time_height_meteograms(ds, varname, lat, lon, model_name, duration):
     ## x-axis is time
     xs = ds.valid_time.values
     terline = ds.sp.values / 100. ## convert from Pa to hPa
-    ht_fill = ax.fill_between(xs, 1000., terline, facecolor='k', edgecolor='k', zorder=10)
+    ht_fill = ax.fill_between(xs, 1000., terline, facecolor='k', edgecolor='grey', alpha=0.5, zorder=10)
 
     # Filled contours
     
@@ -507,15 +507,16 @@ def plot_time_height_meteograms(ds, varname, lat, lon, model_name, duration):
         else:
             start = xs[arr.iloc[i][0]] - np.timedelta64(21600, 's')
             stop = xs[arr.iloc[i][1]] + np.timedelta64(21600, 's')
-        AR_dur = stop - start 
-        AR_duration.append(AR_dur / np.timedelta64(1, 'h'))
+        AR_dur = stop - start
+        AR_dur2 = AR_dur / np.timedelta64(1, 'h')
+        AR_duration.append(AR_dur2)
         midway = (AR_dur / 2) + start
         ax.axvspan(start, stop, color='grey', alpha=0.2, lw=None)
         
         ## sum up precipitation during AR conditions
         prec = ds.tp.isel(step=slice(arr.iloc[i][0]-1, arr.iloc[i][1]+1)).values
         prec = np.nansum(prec)
-        if (prec > 1):
+        if (prec > 1) & (AR_dur2 > 12):
             prec_ann = 'Precip = {0:0.1f} mm'.format(prec)
             ## plot precipitation annotation when there are AR events
             ax.annotate(prec_ann, # this is the text
