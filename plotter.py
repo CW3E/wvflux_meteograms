@@ -277,10 +277,9 @@ def plot_time_height_meteograms(ds, varname, lat, lon, model_name, duration):
     idx = (ds.ivt >=250) & (ds.pwat >=20.)
     s = pd.Series(xr.where(idx, True, False))
     grp = s.eq(False).cumsum()
-    # shade +/- 1.5 hours from the valid time of AR conditions
     arr = grp.loc[s.eq(True)] \
              .groupby(grp) \
-             .apply(lambda x: [x.index.min() - timedelta(hours=1.5), x.index.max() + timedelta(hours=1.5)])
+             .apply(lambda x: [x.index.min(), x.index.max()])
 
     current_dpi=300
     base_dpi=100
@@ -497,17 +496,23 @@ def plot_time_height_meteograms(ds, varname, lat, lon, model_name, duration):
     ax.tick_params(axis='x', which='major')
 
     ## add in grey shading where IWV and IVT > thres
+    # shade +/- 1.5 hours from the valid time of AR conditions
     AR_duration = []
     prec_AR = []
     for i in range(len(arr)):
-        AR_dur = xs[arr.iloc[i][1]] - xs[arr.iloc[i][0]]
+        if dur == 3:
+            start = xs[arr.iloc[i][0]] - timedelta(hours=1.5)
+            stop = xs[arr.iloc[i][1]] + timedelta(hours=1.5)
+        else:
+            start = xs[arr.iloc[i][0]] - timedelta(hours=3)
+            stop = xs[arr.iloc[i][1]] + timedelta(hours=3)
+        AR_dur = stop - start
         AR_duration.append(AR_dur / np.timedelta64(1, 'h'))
-        midway = (AR_dur / 2) + xs[arr.iloc[i][0]]
-        ax.axvspan(xs[arr.iloc[i][0]], xs[arr.iloc[i][1]], color='grey', alpha=0.2, lw=None)
+        midway = (AR_dur / 2) + start
+        ax.axvspan(start, stop, color='grey', alpha=0.2, lw=None)
         
         ## sum up precipitation during AR conditions
         prec = ds.tp.isel(step=slice(arr.iloc[i][0], arr.iloc[i][1])).values
-        # prec_AR.append(np.nansum(prec))
         prec = np.nansum(prec)
         if prec > 1:
             prec_ann = 'Precip = {0:0.1f} mm'.format(prec)
