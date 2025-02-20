@@ -409,10 +409,8 @@ def plot_time_height_meteograms(ds, varname, lat, lon, model_name, duration):
     x_labels = xlbl_lst[0]
     ax.set_xticks(x_ticks[::xtick_dur]) # set the labels every x time steps
     ax.set_xticklabels(x_labels[::xtick_dur])
-    # Set the minor ticks using FixedLocator
+    # Set the minor ticks every 3 hours
     ax.xaxis.set_minor_locator(HourLocator(range(0, 25, 3)))
-    # ax.xaxis.set_minor_locator(ticker.FixedLocator(x_ticks))
-    # ax.minorticks_on()
     ax.tick_params(axis='x', which='minor', bottom=True)
     ax.tick_params(axis='x', which='major')
 
@@ -430,7 +428,7 @@ def plot_time_height_meteograms(ds, varname, lat, lon, model_name, duration):
     
     # Set a maximum of 5 ticks on the y-axis
     ax2.yaxis.set_major_locator(MaxNLocator(5))
-    ax2.minorticks_on()
+    ax2.xaxis.set_minor_locator(HourLocator(range(0, 25, 3)))
     ax2.tick_params(axis='y', which='minor', right=True)
     ax2.set_ylim(bottom=0)
     
@@ -509,19 +507,19 @@ def plot_time_height_meteograms(ds, varname, lat, lon, model_name, duration):
         else:
             start = xs[arr.iloc[i][0]] - np.timedelta64(21600, 's')
             stop = xs[arr.iloc[i][1]] + np.timedelta64(21600, 's')
-        AR_dur = stop - start
-        AR_duration.append(AR_dur / np.timedelta64(1, 'h'))
+        AR_dur = (stop - start) / np.timedelta64(1, 'h')
+        AR_duration.append(AR_dur)
         midway = (AR_dur / 2) + start
         ax.axvspan(start, stop, color='grey', alpha=0.2, lw=None)
         
         ## sum up precipitation during AR conditions
         prec = ds.tp.isel(step=slice(arr.iloc[i][0]-1, arr.iloc[i][1]+1)).values
         prec = np.nansum(prec)
-        if prec > 1:
+        if (prec > 1) & (AR_dur > 6):
             prec_ann = 'Precip = {0:0.1f} mm'.format(prec)
             ## plot precipitation annotation when there are AR events
             ax.annotate(prec_ann, # this is the text
-                        (midway, 0.02), # these are the coordinates to position the label
+                        (midway, 0.03), # these are the coordinates to position the label
                         xycoords='data',
                         ha='center',
                         zorder=200,
