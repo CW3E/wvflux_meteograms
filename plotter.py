@@ -512,7 +512,7 @@ def plot_time_height_meteograms(ds, varname, lat, lon, model_name, duration):
         ax.axvspan(start, stop, color='grey', alpha=0.2, lw=None)
         
         ## sum up precipitation during AR conditions
-        prec = ds.tp.isel(step=slice(arr.iloc[i][0], arr.iloc[i][1])).values
+        prec = ds.tp.isel(step=slice(arr.iloc[i][0]-1, arr.iloc[i][1]+1)).values
         prec = np.nansum(prec)
         if prec > 1:
             prec_ann = 'Precip = {0:0.1f} mm'.format(prec)
