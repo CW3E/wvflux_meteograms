@@ -12,6 +12,7 @@ from datetime import datetime
 import netCDF4
 import xarray as xr
 import multiprocessing as mp
+import gc
 
 from read_deterministic_data import load_GFS_datasets, load_ECMWF_datasets, read_preprocessed_IVT_data
 from calc_funcs import format_timedelta_to_HHMMSS
@@ -159,6 +160,7 @@ if __name__ == '__main__':
     final_arglst = arglst_USWEST + arglst_AK
 
     del ds
+    gc.collect()
 
     ###################################
     ### CREATE PLOTS USING POOL.MAP ###
