@@ -160,7 +160,9 @@ if __name__ == '__main__':
     final_arglst = arglst_USWEST + arglst_AK
 
     del ds
-    gc.collect()
+    # Force garbage collection
+    collected_count = gc.collect()
+    print(f"Garbage collected {collected_count} objects")
 
     ###################################
     ### CREATE PLOTS USING POOL.MAP ###
@@ -170,7 +172,7 @@ if __name__ == '__main__':
 
     # mp.set_start_method('spawn', force=True)    
     # with mp.Pool(processes=16) as pool:
-    with mp.get_context('spawn').Pool(processes=30) as pool:
+    with mp.get_context('spawn').Pool(processes=16) as pool:
         debug_print("Via map with exception")
         debug_print("\tKicking off pool via map with exception")
         pool.map(multiP_create_time_height_meteograms,final_arglst)
