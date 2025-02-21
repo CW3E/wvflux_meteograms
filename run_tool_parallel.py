@@ -129,7 +129,7 @@ if __name__ == '__main__':
     ivt = read_preprocessed_IVT_data(model=model_name, F_lst=F_lst, fdate=pd.to_datetime(ds.time.values).strftime('%Y%m%d%H'))
     ds = ds.assign(ivt=(['step','latitude','longitude'],ivt.ivt.values))
     ## load ds into memory
-    # ds = ds.load()
+    ds = ds.load()
 
     ###############################################
     ### CREATE ARGUMENT LIST FOR CREATING PLOTS ###
@@ -159,10 +159,10 @@ if __name__ == '__main__':
 
     final_arglst = arglst_USWEST + arglst_AK
 
-    # del ds
-    # # Force garbage collection
-    # collected_count = gc.collect()
-    # print(f"Garbage collected {collected_count} objects")
+    del ds
+    # Force garbage collection
+    collected_count = gc.collect()
+    print(f"Garbage collected {collected_count} objects")
 
     ###################################
     ### CREATE PLOTS USING POOL.MAP ###
@@ -170,8 +170,6 @@ if __name__ == '__main__':
 
     print('...create plots ...')
 
-    # mp.set_start_method('spawn', force=True)    
-    # with mp.Pool(processes=16) as pool:
     with mp.get_context('spawn').Pool(processes=16) as pool:
         debug_print("Via map with exception")
         debug_print("\tKicking off pool via map with exception")
