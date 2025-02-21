@@ -342,7 +342,7 @@ class load_GFS_datasets:
         ## add in calculated vars
         ds = ds.assign(wvflux=(['isobaricInhPa','latitude','longitude'],wv_flux))
         # ds = ds.assign(ivt=(['latitude','longitude'],gfs_ivt))
-        ds = ds.assign(freezing_level_pres=(['latitude','longitude'],freezing_level))
+        # ds = ds.assign(freezing_level_pres=(['latitude','longitude'],freezing_level))
 
         ## write intermediate data files
         tmp_directory = "/data/projects/operations/wvflux_meteograms/data/tmp/"
