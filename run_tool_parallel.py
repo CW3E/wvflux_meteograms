@@ -159,10 +159,10 @@ if __name__ == '__main__':
 
     final_arglst = arglst_USWEST + arglst_AK
 
-    del ds
-    # Force garbage collection
-    collected_count = gc.collect()
-    print(f"Garbage collected {collected_count} objects")
+    # del ds
+    # # Force garbage collection
+    # collected_count = gc.collect()
+    # print(f"Garbage collected {collected_count} objects")
 
     ###################################
     ### CREATE PLOTS USING POOL.MAP ###
