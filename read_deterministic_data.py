@@ -299,7 +299,7 @@ class load_GFS_datasets:
         "temperature":{"typeOfLevel":'isobaricInhPa',"shortName":"t"}, #Temperature
         "rh":{"typeOfLevel":'isobaricInhPa',"shortName":"r"}, #Relative Humidity
         "sfc_pressure":{'name': 'Surface pressure', 'typeOfLevel': 'surface', 'level': 0, 'paramId': 134, 'shortName': 'sp'}, #surface pressure
-        "freezing_level": {'typeOfLevel': 'isothermZero', 'shortName': 'gh'}, ## freezing level
+        # "freezing_level": {'typeOfLevel': 'isothermZero', 'shortName': 'gh'}, ## freezing level
         "orog": {'typeOfLevel': 'surface', 'shortName': 'orog'}, ## elevation
     }
         ## need a special dict for prec bc F000 does not have this
@@ -311,8 +311,8 @@ class load_GFS_datasets:
         #gfs is a dictionary of datasets
         gfs = read_gfs_deterministic(filename=self.fname,vardict=gfs_vardict, show_catalog=False)
 
-        ## get freezing level on pressure levels
-        freezing_level = cfuncs.calculate_zero_degree_isotherm(gfs['freezing_level'])
+        # ## get freezing level on pressure levels
+        # freezing_level = cfuncs.calculate_zero_degree_isotherm(gfs['freezing_level'])
 
 #         #### Calculating IVT #####
         #extending pressure vector to 3d array to match rh shape
@@ -333,10 +333,10 @@ class load_GFS_datasets:
         # BUILD DATASET
         if self.F > 0:
             ds = xr.merge([gfs["u_wind"], gfs["v_wind"], gfs["rh"], gfs["iwv"], gfs["temperature"], gfs["orog"],
-                           gfs["sfc_pressure"], gfs["freezing_level"], gfs["prec"]])
+                           gfs["sfc_pressure"], gfs["prec"]])
         else:
             ds = xr.merge([gfs["u_wind"], gfs["v_wind"], gfs["rh"], gfs["iwv"], gfs["temperature"], gfs["orog"],
-                           gfs["sfc_pressure"], gfs["freezing_level"]])
+                           gfs["sfc_pressure"]])
             
         
         ## add in calculated vars
@@ -410,7 +410,7 @@ class load_ECMWF_datasets:
         ecmwf_s1d_vardict = {
                         "sfc_pressure":{"shortName":'sp'},
                         "iwv":{"shortName":'tcw'},
-                        "freezing_level": {'shortName': 'deg0l'},
+                        # "freezing_level": {'shortName': 'deg0l'},
                         "tp": {'shortName': 'tp'},
                         "z": {'shortName': 'z'},
                         }
@@ -429,17 +429,17 @@ class load_ECMWF_datasets:
             ecmwf_s1d = read_ecmwf_S1D(filename=self.ecmwf_s1d_filename,
                                        vardict=ecmwf_F00_vardict, 
                                        show_catalog=False)
-            ## have to read freezing level from +03 lead
-            ecmwf_deg0l = read_ecmwf_S1D(filename=self.ecmwf_s1d_special_filename,
-                                         vardict={"freezing_level": {'shortName': 'deg0l'}},
-                                         show_catalog=False)
-            ## get freezing level on pressure levels
-            freezing_level = cfuncs.calculate_zero_degree_isotherm(ecmwf_deg0l["freezing_level"])
+            # ## have to read freezing level from +03 lead
+            # ecmwf_deg0l = read_ecmwf_S1D(filename=self.ecmwf_s1d_special_filename,
+            #                              vardict={"freezing_level": {'shortName': 'deg0l'}},
+            #                              show_catalog=False)
+            # ## get freezing level on pressure levels
+            # freezing_level = cfuncs.calculate_zero_degree_isotherm(ecmwf_deg0l["freezing_level"])
             
         else:
             ecmwf_s1d = read_ecmwf_S1D(filename=self.ecmwf_s1d_filename,vardict=ecmwf_s1d_vardict, show_catalog=False)
             ## get freezing level on pressure levels
-            freezing_level = cfuncs.calculate_zero_degree_isotherm(ecmwf_s1d["freezing_level"])
+            # freezing_level = cfuncs.calculate_zero_degree_isotherm(ecmwf_s1d["freezing_level"])
 
         # ### calculating ivt
         # ecmwf_uivt, ecmwf_vivt, ecmwf_ivt = cfuncs.ivt(u_wind=ecmwf_s2d["u_wind"].values,v_wind=ecmwf_s2d["v_wind"].values,specific_humidity=ecmwf_s2d["specific_humidity"], pressure=ecmwf_s2d["pressure"]*100)
@@ -471,14 +471,14 @@ class load_ECMWF_datasets:
         if self.F > 0:
             var_dict = {'pwat': (['latitude', 'longitude'], ecmwf_s1d["iwv"].values),
                         'sp': (['latitude', 'longitude'], ecmwf_s1d["sfc_pressure"].values),
-                        'freezing_level_pres': (['latitude', 'longitude'], freezing_level),
+                        # 'freezing_level_pres': (['latitude', 'longitude'], freezing_level),
                         'gh': (['latitude', 'longitude'], ecmwf_s1d["freezing_level"].values),
                         'orog': (['latitude', 'longitude'], ecmwf_s1d["z"].values/10.),
                         'tp': (['latitude', 'longitude'], ecmwf_s1d["tp"].values*1000.)}
         else: 
             var_dict = {'pwat': (['latitude', 'longitude'], ecmwf_s1d["iwv"].values),
                         'sp': (['latitude', 'longitude'], ecmwf_s1d["sfc_pressure"].values),
-                        'freezing_level_pres': (['latitude', 'longitude'], freezing_level),
+                        # 'freezing_level_pres': (['latitude', 'longitude'], freezing_level),
                         'orog': (['latitude', 'longitude'], ecmwf_s1d["z"].values/10.),
                         'gh': (['latitude', 'longitude'], ecmwf_deg0l["freezing_level"].values)}
 
