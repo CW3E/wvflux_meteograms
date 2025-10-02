@@ -8,12 +8,13 @@ Description: For W-WRF take wrfout and wrfcf and preprocess each individual lead
 import os, sys
 import argparse
 from reader import load_WWRF_datasets
+import globalvars
 
 
 def main():
     parser = argparse.ArgumentParser(description="Preprocess WWRF data for specified init_date and lead_time")
     parser.add_argument("--leadtime", required=True, help="Step in forecast lead times (hours)")
-    parser.add_argument("--outdir", type=str, default="/cw3e/mead/projects/cwp186/data/tmp/", help="Output NetCDF Directory")
+    parser.add_argument("--outdir", type=str, default=globalvars.path_to_repo+"data/tmp/", help="Output NetCDF Directory")
     parser.add_argument("--init_date", required=True, help="the initialization date to preprocess in YYYYMMDDHH")
     args = parser.parse_args()
 

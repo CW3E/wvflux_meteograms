@@ -191,7 +191,7 @@ def draw_basemap(ax, datacrs=ccrs.PlateCarree(), extent=None, xticks=None, ytick
     return ax
 
 
-def plot_time_height_meteograms(ds, varname, lat, lon, model_name, duration):
+def plot_time_height_meteograms(ds, varname, lat, lon, model_name, duration, fig_path'data/projects/operations/wvflux_meteograms/figs/'):
     '''
     Plots WVFlux Meteogram Plot from given data
     
@@ -306,10 +306,6 @@ def plot_time_height_meteograms(ds, varname, lat, lon, model_name, duration):
     ## use gs[rows index, columns index] to access grids
     fig = plt.figure(figsize=(10., 14.))
     fig.dpi = current_dpi
-    if model_name == 'WWRF':
-        fig_path = '/home/dnash/cwp140/figs/'
-    else:
-        fig_path = '/data/projects/operations/wvflux_meteograms/figs/'
     if varname == 'wvflux':
         fname = fig_path + '{0}/{0}_{1}DayWVFlux_{2}_{3}'.format(model_name, duration, flat_lbl, flon_lbl)
     elif varname == 'r':

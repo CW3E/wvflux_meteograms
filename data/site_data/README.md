@@ -1,0 +1,1 @@
+This is where the single site files will be saved. For each initialization time, this combines all the leads F0-168 every 3-hr for one lat/lon point. This data is used for plotting.

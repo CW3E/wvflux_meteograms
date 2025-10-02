@@ -5,13 +5,14 @@ import xarray as xr
 import numpy as np
 import pandas as pd
 from reader import load_WWRF_QPF
+import globalvars
 
 def main():
     parser = argparse.ArgumentParser(description="Extract site-specific time series from lead-time NetCDFs")
     parser.add_argument("--site", required=True, help="Site integer: values 0-424")
     parser.add_argument("--init_date", required=True, help="the initialization date to preprocess in YYYYMMDDHH")
-    parser.add_argument("--indir", type=str, default="/cw3e/mead/projects/cwp186/data/tmp/", help="Directory containing per-leadtime NetCDF files")
-    parser.add_argument("--outdir", type=str, default="/cw3e/mead/projects/cwp186/data/tmp/site_data/", help="Output directory")
+    parser.add_argument("--indir", type=str, default=globalvars.path_to_repo+"data/tmp/", help="Directory containing per-leadtime NetCDF files")
+    parser.add_argument("--outdir", type=str, default=globalvars.path_to_repo+"data/site_data/", help="Output directory")
     parser.add_argument("--pattern", default="preprocess_F{F}.nc",
                         help="Filename pattern inside indir (default: preprocess_F{F}.nc)")
     parser.add_argument("--leadmin", type=int, default=0, help="Minimum forecast lead time (hours)")

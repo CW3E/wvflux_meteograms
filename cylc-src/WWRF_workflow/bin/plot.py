@@ -12,12 +12,13 @@ import pandas as pd
 # Path to modules
 sys.path.append('../../../modules/')
 from plotter import plot_time_height_meteograms
+import globalvars
 
 def main():
     parser = argparse.ArgumentParser(description="Plot time-height meteograms using site-specific time series")
     parser.add_argument("--site", required=True, help="Site integer: values 0-424")
-    parser.add_argument("--indir", type=str, default="/cw3e/mead/projects/cwp186/data/tmp/site_data/", help="site data directory")
-    parser.add_argument("--outdir", type=str, default="/home/dnash/cwp140/figs/", help="Plot output directory")
+    parser.add_argument("--indir", type=str, default=globalvars.path_to_repo+"data/site_data/", help="site data directory")
+    parser.add_argument("--outdir", type=str, default=globalvars.path_to_repo+"/figs/", help="Plot output directory")
     parser.add_argument("--pattern", default="site{site}.nc",
                         help="Filename pattern inside indir (default: site{site}.nc)")
     args = parser.parse_args()
@@ -40,7 +41,7 @@ def main():
                 ts = pd.timedelta_range(start='0 day', periods=25, freq='3h')
             subset_ds = ds.sel(step=ts)
                 
-            plot_time_height_meteograms(subset_ds, varname, lat, 360-lon, model_name, dur)
+            plot_time_height_meteograms(subset_ds, varname, lat, 360-lon, model_name, dur, fig_path=args.outdir)
 
 if __name__ == "__main__":
     main()
