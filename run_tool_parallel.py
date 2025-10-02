@@ -37,10 +37,6 @@ def multiP_preprocess_intermediate(F):
     elif model_name == 'GFS':
         s = reader.load_GFS_datasets(F=F, fdate=fdate)
         s.calc_vars()
-
-    elif model_name == 'WWRF':
-        s = reader.load_WWRF_datasets(F=F, init_str=fdate)
-        s.calc_vars()
         
     return None
         
@@ -58,8 +54,6 @@ def subset_ds_func(ds, duration, model_name, lat=None, lon=None, loc=None):
     ## subset to current point and duration length
     if (model_name == 'GFS') | (model_name == 'ECMWF'):
         ds = ds.sel(latitude=lat, longitude=360-lon, step=ts, method='nearest')
-    elif model_name == 'WWRF':
-        ds = ds.sel(location=loc, step=ts, method='nearest')
     return ds
 
 def multiP_create_time_height_meteograms(argval):    
@@ -83,7 +77,7 @@ if __name__ == '__main__':
         arr1 = np.arange(0, 72+3, 3)
         arr2 = np.arange(78, 168+6, 6)
         F_lst = np.concatenate((arr1, arr2), axis=0)
-    elif (model_name == 'GFS') | (model_name == 'WWRF'):
+    elif (model_name == 'GFS'):
         F_lst = np.arange(0, 168+3, 3)
 
     #################################
@@ -92,10 +86,7 @@ if __name__ == '__main__':
     print('Removing tmp intermediate data files...') 
     # Specify the directory and the pattern
     # tmp_directory = "/home/dnash/comet_data/tmp/"
-    if (model_name == 'GFS') | (model_name == 'ECMWF'):
-        tmp_directory = "/data/projects/operations/wvflux_meteograms/data/tmp/"
-    elif model_name == 'WWRF':
-        tmp_directory = "/cw3e/mead/projects/cwp186/data/tmp/"
+    tmp_directory = "/data/projects/operations/wvflux_meteograms/data/tmp/"
     pattern = "tmp_{0}*.nc".format(model_name)  # Delete all tmp files
     remove_tmp_data_files(tmp_directory, pattern)
 
@@ -141,13 +132,6 @@ if __name__ == '__main__':
     if (model_name == 'GFS') | (model_name == 'ECMWF'):
         ivt = reader.read_preprocessed_IVT_data(model=model_name, F_lst=F_lst, fdate=pd.to_datetime(ds.time.values).strftime('%Y%m%d%H'))
         ds = ds.assign(ivt=(['step','latitude','longitude'],ivt.ivt.values))
-
-    if model_name == 'WWRF':
-        qpf = reader.load_WWRF_QPF(fdate) ## read preprocessed qpf
-        ds = xr.merge([ds, qpf], compat='no_conflicts')
-        td_index = pd.to_timedelta(ds.step.values, unit='h')
-        # assign as the 'step' coordinate
-        ds = ds.assign_coords(step=td_index)
     
     
     ## load ds into memory
@@ -161,37 +145,25 @@ if __name__ == '__main__':
     var_lst = ['r', 'wvflux']
     dur_lst = [7, 3]
 
-    if model_name == 'WWRF':
-        final_arglst = []
-        loc_lst = ds.location.values
-        for i, loc in enumerate(loc_lst):
+    arglst_USWEST = []
+    for i, x in enumerate(lon_lst):
+        for j, y in enumerate(lat_lst):
             for k, varname in enumerate(var_lst):
                 for l, dur in enumerate(dur_lst):
-                    subset_ds = subset_ds_func(ds, dur, model_name, lat=None, lon=None, loc=loc)
-                    x = subset_ds.longitude.values
-                    y = subset_ds.latitude.values
-                    final_arglst.append((subset_ds, x,y, varname, dur, model_name))
-        
-    else:
-        arglst_USWEST = []
-        for i, x in enumerate(lon_lst):
-            for j, y in enumerate(lat_lst):
-                for k, varname in enumerate(var_lst):
-                    for l, dur in enumerate(dur_lst):
-                        subset_ds = subset_ds_func(ds, dur, model_name, lat=y, lon=x, loc=None)
-                        arglst_USWEST.append((subset_ds, x,y, varname, dur, model_name))
-    
-        lat_lst = np.arange(51, 70, 1)
-        lon_lst = np.arange(130, 175, 1)               
-        arglst_AK = []
-        for i, x in enumerate(lon_lst):
-            for j, y in enumerate(lat_lst):
-                for k, varname in enumerate(var_lst):
-                    for l, dur in enumerate(dur_lst):
-                        subset_ds = subset_ds_func(ds, dur, model_name, lat=y, lon=x, loc=None)
-                        arglst_AK.append((subset_ds, x,y, varname, dur, model_name))
-    
-        final_arglst = arglst_USWEST + arglst_AK
+                    subset_ds = subset_ds_func(ds, dur, model_name, lat=y, lon=x, loc=None)
+                    arglst_USWEST.append((subset_ds, x,y, varname, dur, model_name))
+
+    lat_lst = np.arange(51, 70, 1)
+    lon_lst = np.arange(130, 175, 1)               
+    arglst_AK = []
+    for i, x in enumerate(lon_lst):
+        for j, y in enumerate(lat_lst):
+            for k, varname in enumerate(var_lst):
+                for l, dur in enumerate(dur_lst):
+                    subset_ds = subset_ds_func(ds, dur, model_name, lat=y, lon=x, loc=None)
+                    arglst_AK.append((subset_ds, x,y, varname, dur, model_name))
+
+    final_arglst = arglst_USWEST + arglst_AK
 
     del ds
     # Force garbage collection
