@@ -10,7 +10,8 @@ import argparse
 import xarray as xr
 import pandas as pd
 # Path to modules
-sys.path.append('../../../modules/')
+import globalvars
+sys.path.append(f'{globalvars.path_to_repo}modules/')
 from plotter import plot_time_height_meteograms
 import globalvars
 

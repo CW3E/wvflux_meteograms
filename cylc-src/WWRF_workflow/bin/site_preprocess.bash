@@ -12,7 +12,9 @@ sbatch <<EOF
 #SBATCH --output=logs/site_preprocess_${SITE}_%j.out
 
 echo "Creating site-specific NetCDF for ${SITE}"
-python extract_site.py \
+module load singularitypro
+singularity exec --bind /cw3e:/cw3e /cw3e/mead/projects/cwp186/repos/wvflux_meteograms/envs/wvflux_meteograms.sif \
+/cw3e/mead/projects/cwp186/repos/wvflux_meteograms/cylc-src/WWRF_workflow/bin/extract_site.py \
     --site ${SITE} \
     --init_date ${FDATE} \
 EOF

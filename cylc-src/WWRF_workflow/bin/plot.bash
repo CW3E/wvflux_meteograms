@@ -11,7 +11,8 @@ sbatch <<EOF
 #SBATCH --output=logs/plot_${SITE}_%j.out
 
 echo "Starting plot for site ${SITE}"
-python plot.py --site ${SITE}
+module load singularitypro
+singularity exec --bind /cw3e:/cw3e /cw3e/mead/projects/cwp186/repos/wvflux_meteograms/envs/wvflux_meteograms.sif /cw3e/mead/projects/cwp186/repos/wvflux_meteograms/cylc-src/WWRF_workflow/bin/plot.py --site ${SITE}
 EOF
 
 # /home/dnash/miniconda3/envs/SEAK-impacts/bin/python -u plot.py --site 0

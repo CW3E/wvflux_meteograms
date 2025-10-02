@@ -12,5 +12,6 @@ sbatch <<EOF
 #SBATCH --output=logs/preprocess_F${F}_%j.out
 
 echo "Starting preprocess for lead time ${F}"
-python preprocess.py --leadtime ${F} --init_date ${fdate}
+module load singularitypro
+singularity exec --bind /cw3e:/cw3e /cw3e/mead/projects/cwp186/repos/wvflux_meteograms/envs/wvflux_meteograms.sif /cw3e/mead/projects/cwp186/repos/wvflux_meteograms/cylc-src/WWRF_workflow/bin/preprocess.py --leadtime ${F} --init_date ${fdate}
 EOF
