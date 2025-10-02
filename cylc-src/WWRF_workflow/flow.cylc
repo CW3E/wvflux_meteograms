@@ -1,43 +1,32 @@
-[scheduler]
-    [[events]]
-        abort on = true   # fail fast if something breaks
+[task parameters]
+        F = 0..168..3
+        site = 0..424..1
 
+[scheduler]
+    allow implicit tasks = True
 [scheduling]
-    # One workflow cycle per forecast cycle (00Z, 12Z, etc.)
-    [[dependencies]]
-        graph = """
-            preprocess<F>  => gather_preprocess
+    initial cycle point = 20251001T00Z
+    [[graph]]
+        T00 = """
+            preprocess<F> => gather_preprocess
             gather_preprocess => site_preprocess<site>
             site_preprocess<site> => plot<site>
         """
 
 [runtime]
     [[root]]
-        # common defaults for all jobs
         execution time limit = PT2H
         work sub-directory = work
-        # The wrapper scripts will do sbatch submission
-        script = """
-        ./bin/${CYLC_TASK_NAME}.sh ${CYLC_TASK_PARAM_F}${CYLC_TASK_PARAM_SITE}
-        """
 
     [[preprocess]]
         script = "./bin/preprocess.bash ${CYLC_TASK_PARAM_F}"
-        [[[parameter]]]
-            # forecast lead times: 0 to 168 every 3
-            F = 0..168/PT3
+        
 
     [[gather_preprocess]]
-        # barrier task, just touches a flag file
         script = "touch gathered.flag"
 
     [[site_preprocess]]
-        script = "./bin/site_preprocess.bash ${CYLC_TASK_PARAM_SITE}"
-        [[[parameter]]]
-            site = 0..424/PT1
+        script = "./bin/site_preprocess.bash ${CYLC_TASK_PARAM_SITE}"            
 
     [[plot]]
         script = "./bin/plot.bash ${CYLC_TASK_PARAM_SITE}"
-        [[[parameter]]]
-            # expand to one task per location
-            site = 0..424/PT1
