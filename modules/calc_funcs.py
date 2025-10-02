@@ -122,7 +122,7 @@ def calculate_zero_degree_isotherm(height):
 
 def calculate_air_density(pressure, temperature, relative_humidity):
     ## add metpy units to each var
-    pres = pressure * units.hPa
+    pres = pressure * units(pressure.units)
     temp = temperature.values * units(temperature.units)
     rh = relative_humidity.values * units(relative_humidity.units)
     

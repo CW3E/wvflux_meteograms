@@ -39,8 +39,12 @@ import cw3ecmaps as ccmaps
 def roundPartial(value, resolution):
     return np.round(value / resolution) * resolution
 
-def set_cw3e_font(current_dpi, scaling_factor):
-    fm.fontManager.addfont('/home/cw3eit/ARPortal/gefs/scripts/ar_landfall_tool/utils/fonts/helvetica.ttc')
+def set_cw3e_font(current_dpi, scaling_factor, model_name):
+    if model_name == 'WWRF':
+        path_to_font = '/home/dnash/repos/wvflux_meteograms/utils/fonts/helvetica.ttc'
+    else:
+        path_to_font = '/home/cw3eit/ARPortal/gefs/scripts/ar_landfall_tool/utils/fonts/helvetica.ttc'
+    fm.fontManager.addfont(path_to_font)
 
     plt.rcParams.update({
                     'font.family' : 'Helvetica',
@@ -66,7 +70,8 @@ def plot_cw3e_logo(ax, orientation):
     if orientation == 'horizontal':
         im = '/common/CW3E_Logo_Suite/1-Horzontal-PRIMARY_LOGO/Digital/JPG-RGB/CW3E-Logo-Horizontal-FullColor-RGB.jpg'
     else:
-        im = '/common/CW3E_Logo_Suite/5-Vertical-Acronym_Only/Digital/PNG/CW3E-Logo-Vertical-Acronym-FullColor.png'
+        # im = '/common/CW3E_Logo_Suite/5-Vertical-Acronym_Only/Digital/PNG/CW3E-Logo-Vertical-Acronym-FullColor.png'
+        im = '/home/dnash/repos/wvflux_meteograms/utils/CW3E-Logo-Vertical-Acronym-FullColor.png'
     img = np.asarray(Image.open(im))
     ax.imshow(img)
     ax.axis('off')
@@ -231,8 +236,12 @@ def plot_time_height_meteograms(ds, varname, lat, lon, model_name, duration):
         ds = ds.transpose('hybrid', 'step')
         xs2 = ds.valid_time_td.values
         ys = ds.pressure.values
+    elif model_name == 'WWRF':
+        ds = ds.transpose('z', 'step')
+        xs2 = ds.valid_time_td.values
+        ys = ds.pressure.values/100.
     else:
-        print('Choose either GFS or ECMWF', flush=True)
+        print('Choose either GFS, ECMWF or WWRF', flush=True)
         
     kw_ticks = {'length': 4, 'width': 0.5, 'pad': 2, 'color': 'black',
                 'labelsize': 10, 'labelcolor': 'dimgray'}
@@ -286,7 +295,7 @@ def plot_time_height_meteograms(ds, varname, lat, lon, model_name, duration):
     base_dpi=100
     scaling_factor = (current_dpi / base_dpi)**0.2
 
-    set_cw3e_font(current_dpi, scaling_factor)
+    set_cw3e_font(current_dpi, scaling_factor, model_name)
 
     nrows = 4
     ncols = 1
@@ -297,7 +306,10 @@ def plot_time_height_meteograms(ds, varname, lat, lon, model_name, duration):
     ## use gs[rows index, columns index] to access grids
     fig = plt.figure(figsize=(10., 14.))
     fig.dpi = current_dpi
-    fig_path = '/data/projects/operations/wvflux_meteograms/figs/'
+    if model_name == 'WWRF':
+        fig_path = '/home/dnash/cwp140/figs/'
+    else:
+        fig_path = '/data/projects/operations/wvflux_meteograms/figs/'
     if varname == 'wvflux':
         fname = fig_path + '{0}/{0}_{1}DayWVFlux_{2}_{3}'.format(model_name, duration, flat_lbl, flon_lbl)
     elif varname == 'r':
@@ -322,6 +334,7 @@ def plot_time_height_meteograms(ds, varname, lat, lon, model_name, duration):
     
     cmap, norm, bnds, cbarticks, cbarlbl = ccmaps.cmap(varname) # get cmap from our custom function
     ## filled contours
+    print(xs2.shape, ys.shape, ds[varname].values.shape)
     cf = ax.contourf(xs2, ys, ds[varname].values, levels=bnds, cmap=cmap, norm=norm, alpha=1, extend='neither', zorder=-1)
     ## contour lines
     cs = ax.contour(xs2, ys, ds[varname].values, levels=bnds, colors=['grey'], linewidths=0.3, alpha=1, zorder=9)
@@ -347,7 +360,7 @@ def plot_time_height_meteograms(ds, varname, lat, lon, model_name, duration):
     plt.clabel(z0, **kw_clabels)
 
     # wind vectors
-    if model_name == 'ECMWF':
+    if (model_name == 'ECMWF') | (model_name == 'WWRF'):
         dw = 4 # how often to plot vector vertically
         dw2 = 1 # how often to plot horizontally
         ax.barbs(xs2[::dw, ::dw2], ys[::dw, ::dw2], 
@@ -358,8 +371,6 @@ def plot_time_height_meteograms(ds, varname, lat, lon, model_name, duration):
         ax.barbs(xs2[::dw], ys[::dw], 
                  ds.u.values[::dw, ::dw]*1.944, ds.v.values[::dw, ::dw]*1.944, 
                  linewidth=0.75, length=5.5)
-    else:
-        print('Choose either GFS or ECMWF', flush=True)
 
     ## apply xtick parameters (day/hour)
     x_ticks = xtick_lst[0]

@@ -94,6 +94,6 @@ auxhist*
 
 # other #
 # ################
-.ipynb_checkpoints/*
-/data/tmp/ipynb_checkpoints/*
-.ncdu_output/*
+**/.pycache/
+**/.ipynb_checkpoints/
+**/.ncdu_output/

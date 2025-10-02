@@ -2,11 +2,12 @@
 """
 Filename:    read_deterministic_data.py
 Author:      Deanna Nash, dnash@ucsd.edu
-Description: functions to read deterministic data from GFS, ECMWF, and WWRF
+Description: functions to read deterministic data from GFS, ECMWF
 """
 
 import sys
 import os
+import gc
 import glob
 import shutil
 import subprocess
@@ -14,7 +15,7 @@ import re
 import xarray as xr
 import numpy as np
 import pandas as pd
-import datetime
+from datetime import datetime, timedelta
 import cartopy.crs as ccrs
 
 import calc_funcs as cfuncs
@@ -378,9 +379,9 @@ class load_ECMWF_datasets:
             print(date_string)
 
 
-        init_time = datetime.datetime.strptime(date_string,'%Y%m%d%H')
-        lead_time = datetime.timedelta(hours=int(F))
-        sp_lead_time = datetime.timedelta(hours=3)
+        init_time = datetime.strptime(date_string,'%Y%m%d%H')
+        lead_time = timedelta(hours=int(F))
+        sp_lead_time = timedelta(hours=3)
 
         ecmwf_s2d_filename = "/S2D{init:%m%d%H%M}{valid:%m%d%H%M}1.grb".format(init=init_time, valid=init_time+lead_time)
         ecmwf_s1d_filename = "/S1D{init:%m%d%H%M}{valid:%m%d%H%M}1".format(init=init_time, valid=init_time+lead_time)

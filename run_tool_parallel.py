@@ -13,8 +13,7 @@ import netCDF4
 import xarray as xr
 import multiprocessing as mp
 import gc
-
-from read_deterministic_data import load_GFS_datasets, load_ECMWF_datasets, read_preprocessed_IVT_data
+import read_deterministic_data as reader
 from calc_funcs import format_timedelta_to_HHMMSS
 from cw3e_tools import remove_tmp_data_files
 from plotter import plot_time_height_meteograms
@@ -29,28 +28,35 @@ def multiP_preprocess_intermediate(F):
     '''
     print('... Loading data for {0} hour lead'.format(F))
     if model_name == 'ECMWF':
-        s = load_ECMWF_datasets(F=F, fdate=fdate)
+        s = reader.load_ECMWF_datasets(F=F, fdate=fdate)
         s.calc_vars()
 
     elif model_name == 'GFS':
-        s = load_GFS_datasets(F=F, fdate=fdate)
+        s = reader.load_GFS_datasets(F=F, fdate=fdate)
+        s.calc_vars()
+
+    elif model_name == 'WWRF':
+        s = reader.load_WWRF_datasets(F=F, init_str=fdate)
         s.calc_vars()
         
     return None
         
-def subset_ds_func(ds, lat, lon, duration, model_name):
+def subset_ds_func(ds, duration, model_name, lat=None, lon=None, loc=None):
     if (duration == 7) & (model_name == 'ECMWF'):
-        ts = pd.timedelta_range(start='0 day', periods=29, freq='6H')
+        ts = pd.timedelta_range(start='0 day', periods=29, freq='6h')
         xtick_dur = 2
-    elif (duration == 7) & (model_name == 'GFS'):
-        ts = pd.timedelta_range(start='0 day', periods=57, freq='3H')
+    elif (duration == 7) & (model_name != 'ECMWF'):
+        ts = pd.timedelta_range(start='0 day', periods=57, freq='3h')
         xtick_dur = 4
     else:
-        ts = pd.timedelta_range(start='0 day', periods=25, freq='3H')
+        ts = pd.timedelta_range(start='0 day', periods=25, freq='3h')
         xtick_dur = 2
     
     ## subset to current point and duration length
-    ds = ds.sel(latitude=lat, longitude=360-lon, step=ts, method='nearest')
+    if (model_name == 'GFS') | (model_name == 'ECMWF'):
+        ds = ds.sel(latitude=lat, longitude=360-lon, step=ts, method='nearest')
+    elif model_name == 'WWRF':
+        ds = ds.sel(location=loc, step=ts, method='nearest')
     return ds
 
 def multiP_create_time_height_meteograms(argval):    
@@ -74,7 +80,7 @@ if __name__ == '__main__':
         arr1 = np.arange(0, 72+3, 3)
         arr2 = np.arange(78, 168+6, 6)
         F_lst = np.concatenate((arr1, arr2), axis=0)
-    elif model_name == 'GFS':
+    elif (model_name == 'GFS') | (model_name == 'WWRF'):
         F_lst = np.arange(0, 168+3, 3)
 
     #################################
@@ -83,13 +89,16 @@ if __name__ == '__main__':
     print('Removing tmp intermediate data files...') 
     # Specify the directory and the pattern
     # tmp_directory = "/home/dnash/comet_data/tmp/"
-    tmp_directory = "/data/projects/operations/wvflux_meteograms/data/tmp/"
+    if (model_name == 'GFS') | (model_name == 'ECMWF'):
+        tmp_directory = "/data/projects/operations/wvflux_meteograms/data/tmp/"
+    elif model_name == 'WWRF':
+        tmp_directory = "/cw3e/mead/projects/cwp186/data/tmp/"
     pattern = "tmp_{0}*.nc".format(model_name)  # Delete all tmp files
     remove_tmp_data_files(tmp_directory, pattern)
 
-    ############################################
-    ### PREPROCESS INTERMEDIATE GFS OR ECMWF ###
-    ############################################
+    ##########################################
+    ### PREPROCESS INTERMEDIATE MODEL DATA ###
+    ##########################################
     print('...preprocess intermediate data ...')
 
     with mp.Pool(processes=30) as pool:
@@ -126,10 +135,20 @@ if __name__ == '__main__':
         ds = ds.drop_vars(["tp"]) # get rid of old tp (accumulated variable)
         ds = xr.merge([ds, new_prec]) # merge dataset with new tp
 
-    ivt = read_preprocessed_IVT_data(model=model_name, F_lst=F_lst, fdate=pd.to_datetime(ds.time.values).strftime('%Y%m%d%H'))
-    ds = ds.assign(ivt=(['step','latitude','longitude'],ivt.ivt.values))
+    if (model_name == 'GFS') | (model_name == 'ECMWF'):
+        ivt = reader.read_preprocessed_IVT_data(model=model_name, F_lst=F_lst, fdate=pd.to_datetime(ds.time.values).strftime('%Y%m%d%H'))
+        ds = ds.assign(ivt=(['step','latitude','longitude'],ivt.ivt.values))
+
+    if model_name == 'WWRF':
+        qpf = reader.load_WWRF_QPF(fdate) ## read preprocessed qpf
+        ds = xr.merge([ds, qpf], compat='no_conflicts')
+        td_index = pd.to_timedelta(ds.step.values, unit='h')
+        # assign as the 'step' coordinate
+        ds = ds.assign_coords(step=td_index)
+    
+    
     ## load ds into memory
-    # ds = ds.load()
+    ds = ds.load()
 
     ###############################################
     ### CREATE ARGUMENT LIST FOR CREATING PLOTS ###
@@ -139,30 +158,42 @@ if __name__ == '__main__':
     var_lst = ['r', 'wvflux']
     dur_lst = [7, 3]
 
-    arglst_USWEST = []
-    for i, x in enumerate(lon_lst):
-        for j, y in enumerate(lat_lst):
+    if model_name == 'WWRF':
+        final_arglst = []
+        loc_lst = ds.location.values
+        for i, loc in enumerate(loc_lst):
             for k, varname in enumerate(var_lst):
                 for l, dur in enumerate(dur_lst):
-                    subset_ds = subset_ds_func(ds, y, x, dur, model_name)
-                    arglst_USWEST.append((subset_ds, x,y, varname, dur, model_name))
+                    subset_ds = subset_ds_func(ds, dur, model_name, lat=None, lon=None, loc=loc)
+                    x = subset_ds.longitude.values
+                    y = subset_ds.latitude.values
+                    final_arglst.append((subset_ds, x,y, varname, dur, model_name))
+        
+    else:
+        arglst_USWEST = []
+        for i, x in enumerate(lon_lst):
+            for j, y in enumerate(lat_lst):
+                for k, varname in enumerate(var_lst):
+                    for l, dur in enumerate(dur_lst):
+                        subset_ds = subset_ds_func(ds, dur, model_name, lat=y, lon=x, loc=None)
+                        arglst_USWEST.append((subset_ds, x,y, varname, dur, model_name))
+    
+        lat_lst = np.arange(51, 70, 1)
+        lon_lst = np.arange(130, 175, 1)               
+        arglst_AK = []
+        for i, x in enumerate(lon_lst):
+            for j, y in enumerate(lat_lst):
+                for k, varname in enumerate(var_lst):
+                    for l, dur in enumerate(dur_lst):
+                        subset_ds = subset_ds_func(ds, dur, model_name, lat=y, lon=x, loc=None)
+                        arglst_AK.append((subset_ds, x,y, varname, dur, model_name))
+    
+        final_arglst = arglst_USWEST + arglst_AK
 
-    lat_lst = np.arange(51, 70, 1)
-    lon_lst = np.arange(130, 175, 1)               
-    arglst_AK = []
-    for i, x in enumerate(lon_lst):
-        for j, y in enumerate(lat_lst):
-            for k, varname in enumerate(var_lst):
-                for l, dur in enumerate(dur_lst):
-                    subset_ds = subset_ds_func(ds, y, x, dur, model_name)
-                    arglst_AK.append((subset_ds, x,y, varname, dur, model_name))
-
-    final_arglst = arglst_USWEST + arglst_AK
-
-    # del ds
-    # # Force garbage collection
-    # collected_count = gc.collect()
-    # print(f"Garbage collected {collected_count} objects")
+    del ds
+    # Force garbage collection
+    collected_count = gc.collect()
+    print(f"Garbage collected {collected_count} objects")
 
     ###################################
     ### CREATE PLOTS USING POOL.MAP ###
@@ -170,8 +201,6 @@ if __name__ == '__main__':
 
     print('...create plots ...')
 
-    # mp.set_start_method('spawn', force=True)    
-    # with mp.Pool(processes=16) as pool:
     with mp.get_context('spawn').Pool(processes=16) as pool:
         debug_print("Via map with exception")
         debug_print("\tKicking off pool via map with exception")
