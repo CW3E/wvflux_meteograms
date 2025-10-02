@@ -13,6 +13,9 @@ import netCDF4
 import xarray as xr
 import multiprocessing as mp
 import gc
+
+## add personal modules
+sys.path.append('modules/')
 import read_deterministic_data as reader
 from calc_funcs import format_timedelta_to_HHMMSS
 from cw3e_tools import remove_tmp_data_files

@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --account=cwp140
+#SBATCH --account=cwp186
 #SBATCH --partition=shared-128
 #SBATCH --job-name=preprocess_F
 #SBATCH --output=logs/preprocess_F_%A_%a.out

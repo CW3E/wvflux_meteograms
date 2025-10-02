@@ -3,6 +3,8 @@ SITE=$1
 FDATE=$2
 sbatch <<EOF
 #!/bin/bash
+#SBATCH --account=cwp186
+#SBATCH --partition=shared-128
 #SBATCH --job-name=site_preprocess_${SITE}
 #SBATCH --time=00:30:00
 #SBATCH --cpus-per-task=2

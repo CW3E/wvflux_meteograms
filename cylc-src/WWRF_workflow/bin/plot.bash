@@ -2,6 +2,8 @@
 SITE=$1
 sbatch <<EOF
 #!/bin/bash
+#SBATCH --account=cwp186
+#SBATCH --partition=shared-128
 #SBATCH --job-name=plot_${SITE}
 #SBATCH --time=00:30:00
 #SBATCH --cpus-per-task=2
@@ -9,7 +11,7 @@ sbatch <<EOF
 #SBATCH --output=logs/plot_${SITE}_%j.out
 
 echo "Starting plot for site ${SITE}"
-python plot.py --site ${SITE} --indir ./tempdata --outdir ./plots
+python plot.py --site ${SITE}
 EOF
 
 # /home/dnash/miniconda3/envs/SEAK-impacts/bin/python -u plot.py --site 0
