@@ -41,7 +41,7 @@ def roundPartial(value, resolution):
 
 def set_cw3e_font(current_dpi, scaling_factor, model_name):
     if model_name == 'WWRF':
-        path_to_font = '/home/dnash/repos/wvflux_meteograms/utils/fonts/helvetica.ttc'
+        path_to_font = '/cw3e/mead/projects/cwp186/repos/wvflux_meteograms/utils/fonts/helvetica.ttc'
     else:
         path_to_font = '/home/cw3eit/ARPortal/gefs/scripts/ar_landfall_tool/utils/fonts/helvetica.ttc'
     fm.fontManager.addfont(path_to_font)
@@ -71,7 +71,7 @@ def plot_cw3e_logo(ax, orientation):
         im = '/common/CW3E_Logo_Suite/1-Horzontal-PRIMARY_LOGO/Digital/JPG-RGB/CW3E-Logo-Horizontal-FullColor-RGB.jpg'
     else:
         # im = '/common/CW3E_Logo_Suite/5-Vertical-Acronym_Only/Digital/PNG/CW3E-Logo-Vertical-Acronym-FullColor.png'
-        im = '/home/dnash/repos/wvflux_meteograms/utils/CW3E-Logo-Vertical-Acronym-FullColor.png'
+        im = '/cw3e/mead/projects/cwp186/repos/wvflux_meteograms/utils/CW3E-Logo-Vertical-Acronym-FullColor.png'
     img = np.asarray(Image.open(im))
     ax.imshow(img)
     ax.axis('off')
@@ -191,7 +191,7 @@ def draw_basemap(ax, datacrs=ccrs.PlateCarree(), extent=None, xticks=None, ytick
     return ax
 
 
-def plot_time_height_meteograms(ds, varname, lat, lon, model_name, duration, fig_path'data/projects/operations/wvflux_meteograms/figs/'):
+def plot_time_height_meteograms(ds, varname, lat, lon, model_name, duration, fig_path="/data/projects/operations/wvflux_meteograms/figs/"):
     '''
     Plots WVFlux Meteogram Plot from given data
     
@@ -323,7 +323,10 @@ def plot_time_height_meteograms(ds, varname, lat, lon, model_name, duration, fig
     ## y-axis is pressure
     ## x-axis is time
     xs = ds.valid_time.values
-    terline = ds.sp.values / 100. ## convert from Pa to hPa
+    if model_name == "WWRF":
+        terline = ds.sp.values ## sp in hPa already
+    else:
+        terline = ds.sp.values / 100. ## convert from Pa to hPa
     ht_fill = ax.fill_between(xs, 1000., terline, facecolor='k', edgecolor='grey', alpha=0.5, zorder=10)
 
     # Filled contours
@@ -352,7 +355,11 @@ def plot_time_height_meteograms(ds, varname, lat, lon, model_name, duration, fig
     ## add freezing level
     kw_clabels = {'fontsize': 11, 'inline': True, 'inline_spacing': 5, 'fmt': '%i',
                   'rightside_up': True, 'use_clabeltext': True}
-    z0 = ax.contour(xs2, ys, ds['t'].values-273.15, levels=[0], colors=['k'], linewidths=1.25, alpha=1, zorder=100)
+    if model_name == "WWRF":
+        t = ds['t'].values
+    else:
+        t = ds['t'].values-273.15 # need to convert from K to *C
+    z0 = ax.contour(xs2, ys, t, levels=[0], colors=['k'], linewidths=1.25, alpha=1, zorder=100)
     plt.clabel(z0, **kw_clabels)
 
     # wind vectors

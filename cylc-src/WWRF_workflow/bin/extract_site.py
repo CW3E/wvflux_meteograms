@@ -21,7 +21,19 @@ def main():
     args = parser.parse_args()
 
     site = args.site
-    init_str = args.init_date  
+    init_str = args.init_date
+
+    #################################
+    ### CHECK TO REMOVE TMP FILES ###
+    #################################
+    print('Removing tmp intermediate data files...') 
+    # Specify the directory and the pattern
+    fname = args.outdir+f"site{site}.nc"  # Delete all intermediate preprocessed files
+    try:
+        os.remove(fname)
+        print(f"Deleted: {fname}")
+    except OSError as e:
+        print(f"Error deleting {fname}: {e}")
     
     # collect datasets for each lead time
     datasets = []

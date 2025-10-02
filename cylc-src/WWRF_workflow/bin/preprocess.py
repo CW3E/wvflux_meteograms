@@ -20,6 +20,7 @@ def main():
 
     F = args.leadtime
     outdir = args.outdir
+    print(outdir)
     init_str = args.init_date
     model_name = "WWRF"
     
@@ -34,7 +35,7 @@ def main():
         print(f"Deleted: {fname}")
     except OSError as e:
         print(f"Error deleting {fname}: {e}")
-
+    
     s = load_WWRF_datasets(F=F, tmp_directory=outdir, init_str=init_str)
     s.calc_vars()
 

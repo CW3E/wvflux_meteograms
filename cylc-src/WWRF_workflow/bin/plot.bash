@@ -10,5 +10,6 @@ sbatch <<EOF
 
 echo "Starting plot for site ${SITE}"
 python plot.py --site ${SITE} --indir ./tempdata --outdir ./plots
-python plot.py --site 0
 EOF
+
+# /home/dnash/miniconda3/envs/SEAK-impacts/bin/python -u plot.py --site 0

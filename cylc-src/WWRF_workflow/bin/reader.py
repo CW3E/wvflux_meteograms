@@ -260,9 +260,10 @@ class load_WWRF_datasets:
         wwrf = read_wwrfout_deterministic(self.wwrfout_filename, wwrf_vardict)
         
         # calculating specific humidity from relative humidity
-        # temp needs to be in K
-        # pressure needs to be in 
-        q = cfuncs.specific_humidity(temperature=wwrf["temperature"].values-273.15, pressure=wwrf["pres"].values, relative_humidity=wwrf["rh"].values/100)
+        # temp needs to be in K - convert from C to K by +273.15
+        # pressure needs to be in Pa, so that is all good
+        # rh needs to be a fraction (e.g. 0.5 for 50%)
+        q = cfuncs.specific_humidity(temperature=wwrf["temperature"].values+273.15, pressure=wwrf["pres"].values, relative_humidity=wwrf["rh"].values/100)
         
         ## calculating wvflux
         density = cfuncs.calculate_air_density(pressure=wwrf["pres"], temperature=wwrf["temperature"], relative_humidity=wwrf['rh'])

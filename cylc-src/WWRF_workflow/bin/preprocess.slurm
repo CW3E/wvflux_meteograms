@@ -17,4 +17,4 @@
 F=$(( SLURM_ARRAY_TASK_ID * 3 ))
 
 # Run Python script
-/home/dnash/miniconda3/envs/SEAK-impacts/bin/python -u preprocess.py --leadtime ${F} --init_date "2025093000"
+/home/dnash/miniconda3/envs/SEAK-impacts/bin/python -u preprocess.py --leadtime ${F} --init_date "2025100100"
