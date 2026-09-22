@@ -4,9 +4,11 @@ import os
 import xarray as xr
 import numpy as np
 import pandas as pd
+from datetime import datetime
 # import personal modules
 from reader import load_WWRF_QPF
 import globalvars
+globalvars.configure()
 
 def main():
     parser = argparse.ArgumentParser(description="Extract site-specific time series from lead-time NetCDFs")
@@ -22,7 +24,7 @@ def main():
     args = parser.parse_args()
 
     site = args.site
-    init_str = args.init_date
+    init_str = datetime.strptime(args.init_date, "%Y%m%dT%H00Z").strftime("%Y%m%d%H")
 
     #################################
     ### CHECK TO REMOVE TMP FILES ###

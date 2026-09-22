@@ -1,32 +1,85 @@
 [task parameters]
-        F = 0..168..3
-        site = 0..424..1
+    F = 0..168..3
+    SITE = 0..424..1
 
 [scheduler]
     allow implicit tasks = True
+
 [scheduling]
     initial cycle point = 20251001T00Z
+
     [[graph]]
-        T00 = """
+        R1 = """
             preprocess<F> => gather_preprocess
-            gather_preprocess => site_preprocess<site>
-            site_preprocess<site> => plot<site>
+            gather_preprocess => site_preprocess<SITE>
+            site_preprocess<SITE> => plot<SITE>
         """
 
 [runtime]
     [[root]]
         execution time limit = PT2H
-        work sub-directory = work
 
-    [[preprocess]]
-        script = "./bin/preprocess.bash ${CYLC_TASK_PARAM_F}"
-        
+    [[preprocess<F>]]
+        platform = slurm_platform
+
+        script = """
+            module load singularitypro
+
+            singularity exec \
+                --bind /cw3e:/cw3e \
+                /cw3e/mead/projects/cwp186/repos/wvflux_meteograms/envs/wvflux_meteograms.sif \
+                /cw3e/mead/projects/cwp186/repos/wvflux_meteograms/cylc-src/WWRF_workflow/bin/preprocess.py \
+                --leadtime ${CYLC_TASK_PARAM_F} \
+                --init_date ${CYLC_TASK_CYCLE_POINT}
+        """
+    
+        [[[directives]]]
+            --account = cwp186
+            --partition = shared-128
+            --time = 01:00:00
+            --cpus-per-task = 4
+            --mem = 8G
 
     [[gather_preprocess]]
-        script = "touch gathered.flag"
+        script = "echo all lead times processed"
 
-    [[site_preprocess]]
-        script = "./bin/site_preprocess.bash ${CYLC_TASK_PARAM_SITE}"            
+    [[site_preprocess<SITE>]]
+        platform = slurm_platform
 
-    [[plot]]
-        script = "./bin/plot.bash ${CYLC_TASK_PARAM_SITE}"
+        script = """
+            module load singularitypro
+
+            singularity exec \
+                --bind /cw3e:/cw3e \
+                /cw3e/mead/projects/cwp186/repos/wvflux_meteograms/envs/wvflux_meteograms.sif \
+                /cw3e/mead/projects/cwp186/repos/wvflux_meteograms/cylc-src/WWRF_workflow/bin/extract_site.py \
+                --site ${CYLC_TASK_PARAM_SITE} \
+                --init_date ${CYLC_TASK_CYCLE_POINT}
+        """
+    
+        [[[directives]]]
+            --account = cwp186
+            --partition = shared-128
+            --time = 01:00:00
+            --cpus-per-task = 4
+            --mem = 8G
+
+    [[plot<SITE>]]
+        platform = slurm_platform
+
+        script = """
+            module load singularitypro
+
+            singularity exec \
+                --bind /cw3e:/cw3e \
+                /cw3e/mead/projects/cwp186/repos/wvflux_meteograms/envs/wvflux_meteograms.sif \
+                /cw3e/mead/projects/cwp186/repos/wvflux_meteograms/cylc-src/WWRF_workflow/bin/plot.py \
+                --site ${CYLC_TASK_PARAM_SITE} \
+        """
+    
+        [[[directives]]]
+            --account = cwp186
+            --partition = shared-128
+            --time = 01:00:00
+            --cpus-per-task = 4
+            --mem = 8G

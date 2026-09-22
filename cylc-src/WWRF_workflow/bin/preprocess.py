@@ -7,10 +7,13 @@ Description: For W-WRF take wrfout and wrfcf and preprocess each individual lead
 
 import os, sys
 import argparse
+from datetime import datetime
 # import personal modules
 from reader import load_WWRF_datasets
-import globalvars
 
+# Path to modules
+import globalvars
+globalvars.configure()
 
 def main():
     parser = argparse.ArgumentParser(description="Preprocess WWRF data for specified init_date and lead_time")
@@ -22,7 +25,7 @@ def main():
     F = args.leadtime
     outdir = args.outdir
     print(outdir)
-    init_str = args.init_date
+    init_str = datetime.strptime(args.init_date, "%Y%m%dT%H00Z").strftime("%Y%m%d%H")
     model_name = "WWRF"
     
     #################################

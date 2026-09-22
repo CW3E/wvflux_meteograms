@@ -22,7 +22,8 @@ from wrf import getvar
 
 # Path to modules
 import globalvars
-sys.path.append(f'{globalvars.path_to_repo}modules/')
+globalvars.configure()
+sys.path.append(f"{globalvars.path_to_repo}modules")
 import calc_funcs as cfuncs
 
 def find_nearest_indices(ds, lat, lon):

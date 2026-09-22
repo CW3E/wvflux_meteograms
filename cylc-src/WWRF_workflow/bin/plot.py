@@ -4,6 +4,9 @@ Filename:    plot.py
 Author:      Deanna Nash, dnash@ucsd.edu
 Description: Take each site-specific file (one lat/lon pair per .nc file) and create time-height plots for 3-day, 7-day, RH and WVFLUX
 """
+## code to plot faster
+import matplotlib as mpl
+mpl.use('agg')
 
 import os, sys
 import argparse
@@ -11,9 +14,9 @@ import xarray as xr
 import pandas as pd
 # Path to modules
 import globalvars
+globalvars.configure()
 sys.path.append(f'{globalvars.path_to_repo}modules/')
 from plotter import plot_time_height_meteograms
-import globalvars
 
 def main():
     parser = argparse.ArgumentParser(description="Plot time-height meteograms using site-specific time series")
