@@ -43,7 +43,7 @@ def roundPartial(value, resolution):
 
 def set_cw3e_font(current_dpi, scaling_factor, model_name):
     
-    path_to_font = globalvars.path_to_repo / 'utils' / 'fonts' / 'helvetica.ttc'
+    path_to_font = globalvars.path_to_repo + 'utils/fonts/helvetica.ttc'
     fm.fontManager.addfont(path_to_font)
 
     plt.rcParams.update({
@@ -67,7 +67,7 @@ def set_cw3e_font(current_dpi, scaling_factor, model_name):
 
 def plot_cw3e_logo(ax, orientation):
     ## location of CW3E logo
-    im = globalvars.path_to_repo / 'utils' / 'CW3E-Logo-Vertical-Acronym-FullColor.png'
+    im = globalvars.path_to_repo + 'utils/CW3E-Logo-Vertical-Acronym-FullColor.png'
     img = np.asarray(Image.open(im))
     ax.imshow(img)
     ax.axis('off')
@@ -186,16 +186,16 @@ def draw_basemap(ax, datacrs=ccrs.PlateCarree(), extent=None, xticks=None, ytick
     
     return ax
 
-def create_figure_outname(varname, model_name, duration, flat_lbl, flon_lbl, fig_path):
+def create_figure_outname(varname, model_name, duration, flat_lbl, flon_lbl, init_str, fig_path):
     if model_name == 'GFS':
         fig_path = fig_path+'GFS/'
         model_str = 'GFS_25'
     elif model_name == 'ECMWF':
         fig_path = fig_path+'ECMWF/'
         model_str = 'ECMWF_HRes'
-    elif model_name == 'WWRF'
+    elif model_name == 'WWRF':
         fig_path = fig_path+'WWRF/'
-        model_str = 'WWRF'
+        model_str = 'WWRF_9km_GFS'
     else:
         raise ValueError("Choose either GFS, ECMWF or WWRF")
 
@@ -222,7 +222,6 @@ def create_figure_outname(varname, model_name, duration, flat_lbl, flon_lbl, fig
         raise ValueError("please choose either 'r' or 'wvflux' for varname")
 
     domain_str = f"{flat_lbl}_{flon_lbl}"
-    init_str = pd.to_datetime(ds.time.values).strftime('%Y%m%d%H')
     version = 'v1'
     run = '1'
 
@@ -349,7 +348,8 @@ def plot_time_height_meteograms(ds, varname, lat, lon, model_name, duration, fig
     ## use gs[rows index, columns index] to access grids
     fig = plt.figure(figsize=(10., 14.))
     fig.dpi = current_dpi
-    fname, fmt = create_figure_outname(varname, model_name, duration, flat_lbl, flon_lbl, fig_path)
+    init_str = pd.to_datetime(ds.time.values).strftime('%Y%m%d%H')
+    fname, fmt = create_figure_outname(varname, model_name, duration, flat_lbl, flon_lbl, init_str, fig_path)
 
     ####################
     ### TIME-HEIGHT  ###
