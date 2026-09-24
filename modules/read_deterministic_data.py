@@ -2,12 +2,11 @@
 """
 Filename:    read_deterministic_data.py
 Author:      Deanna Nash, dnash@ucsd.edu
-Description: functions to read deterministic data from GFS, ECMWF
+Description: functions to read deterministic data from GFS, ECMWF, and WWRF
 """
 
 import sys
 import os
-import gc
 import glob
 import shutil
 import subprocess
@@ -15,20 +14,17 @@ import re
 import xarray as xr
 import numpy as np
 import pandas as pd
-from datetime import datetime, timedelta
+import datetime
 import cartopy.crs as ccrs
 
 import calc_funcs as cfuncs
-import globalvars
-globalvars.configure()
 
 def read_preprocessed_IVT_data(model, F_lst, fdate=None):
-    
+
     if model == "ECMWF":
-        path_to_data = f'/data/projects/derived_products/{model}_IVT/Deterministic/*/'
+     path_to_data = '/data/projects/derived_products/{0}_IVT/Deterministic/*/'.format(model)
     else:
-        path_to_data = f'/data/projects/derived_products/{model}_IVT/*/'
-        
+     path_to_data = '/data/projects/derived_products/{0}_IVT/*/'.format(model)
     if fdate is None:
         list_of_files = glob.glob(path_to_data)
         fpath = max(list_of_files, key=os.path.getctime)
@@ -37,14 +33,15 @@ def read_preprocessed_IVT_data(model, F_lst, fdate=None):
     elif fdate is not None:
         date_string = fdate
         if model == "ECMWF":
-            fpath = f'/data/projects/derived_products/{model}_IVT/Deterministic/{date_string}/'
+         fpath = '/data/projects/derived_products/{0}_IVT/Deterministic/{1}/'.format(model, date_string)
         else:
-         fpath = f'/data/projects/derived_products/{model}_IVT/{date_string}/'
-    ds_lst = []    
+         fpath = '/data/projects/derived_products/{0}_IVT/{1}/'.format(model, date_string)
+    ds_lst = []
     for i, F in enumerate(F_lst):
-        fname = f'{model}_IVT_{date_string}_F{str(F).zfill(3)}.nc'
+        fname = '{0}_IVT_{1}_F{2}.nc'.format(model, date_string, str(F).zfill(3))
+        print(fpath+fname)
         ds = xr.open_mfdataset(fpath+fname)
-        
+
         ## subset to points used for plots
         lat_lst = np.arange(26., 70., 1.)
         lon_lst = np.arange(186., 250., 1)
@@ -53,9 +50,9 @@ def read_preprocessed_IVT_data(model, F_lst, fdate=None):
         ## rename time to valid time
         ds = ds.rename({'time': 'valid_time'})
         ds_lst.append(ds)
-        
+
     ds = xr.concat(ds_lst, dim='valid_time')
-    
+
     return ds
 
 def read_gfs_deterministic(filename, vardict, show_catalog=False):
@@ -79,7 +76,7 @@ def read_gfs_deterministic(filename, vardict, show_catalog=False):
             "sfc_pressure":{'name': 'Surface pressure', 'typeOfLevel': 'surface', 'level': 0, 'paramId': 134, 'shortName': 'sp'}, #surface pressure
             "sea_level_pressure":{'name': 'Pressure reduced to MSL', 'typeOfLevel': 'meanSea', 'level': 0, 'paramId': 260074, 'shortName': 'prmsl'} #mean sea level pressure
         }
-    
+
     Output:
     Dictionary of objects for each variable set in the vardict argument. Ex.
     uwind = selected_vars["u_wind"].values
@@ -92,53 +89,53 @@ def read_gfs_deterministic(filename, vardict, show_catalog=False):
     '''
     lat_lst = np.arange(26., 70., 1.)
     lon_lst = np.arange(186., 250., 1)
-        
+
     selected_vars = {}
     #iterating over all variables in the vardict and storing each one in a new dictionary called selected_vars
     for var in vardict.keys():
 
         ds = xr.open_dataset(filename,
                         engine='cfgrib',filter_by_keys=vardict[var],backend_kwargs={"indexpath": ''})
-        
-        
+
+
         ## subset to specified pressure levels and points
         if vardict[var]["typeOfLevel"] =='isobaricInhPa':
             ds = ds.sel(latitude=lat_lst, longitude=lon_lst, isobaricInhPa=slice(1000, 200))
-            
+
         else:
             ds = ds.sel(latitude=lat_lst, longitude=lon_lst)
-            
-        #exceptions when shortName does not match variable name in the grib    
+
+        #exceptions when shortName does not match variable name in the grib
         if var == 'u_wind_10m':
             selected_vars[var] = ds["u10"]
         elif var == 'v_wind_10m':
             selected_vars[var] = ds["v10"]
-        else:    
-            selected_vars[var] = ds[vardict[var]["shortName"]]    
+        else:
+            selected_vars[var] = ds[vardict[var]["shortName"]]
 
     return selected_vars
 
 def read_ecmwf_S2D(filename, vardict, show_catalog=False):
-    
+
     '''
     author: Ricardo Vilela
     email: rbatistavilela@ucsd.edu
 
     function usage:
-    
+
     filename example:
     S2D04151200041515001.grb
 
     vardict example:
 
     vardict = {
-               
+
                 "u_wind":{"shortName":'u'}, #U-component of wind
                 "v_wind":{"shortName":'v'}, #V-component of wind
                 "temperature":{"shortName":'t'}, #Temperature
                 "specific_humidity":{"shortName":'q'}, #Specific humidity
-                
-                
+
+
                 }
     Output:
     Dictionary of objects for each variable set in the vardict argument. Ex.
@@ -153,25 +150,25 @@ def read_ecmwf_S2D(filename, vardict, show_catalog=False):
 
 
     '''
-    
-    print('[INFO] reading ECMWF file: '+filename)    
+
+    print('[INFO] reading ECMWF file: '+filename)
 
 
     selected_vars = {}
-    
+
     # reads surface pressure first (this field is needed in order to calculate the pressure levels for each grid)
     sfc_pressure_ds = xr.open_dataset(filename,
                         engine='cfgrib',filter_by_keys={"shortName":'lnsp'},backend_kwargs={"indexpath": ''})
-    
+
     ## subset to lat, lon, and pressure levels we need
     lat_lst = np.arange(26., 70., 1.)
     lon_lst = np.arange(186., 250., 1)
     sfc_pressure_ds = sfc_pressure_ds.sel(latitude=lat_lst, longitude=lon_lst, method='nearest')
-    
+
     sfc_pressure = 2.71828**sfc_pressure_ds.lnsp.values
 
     #read the coefficient lookup table
-    coeff = pd.read_csv(f"{globalvars.path_to_repo}utils/ecmwf_coeffs.txt",names=["A","B"],sep=" ")
+    coeff = pd.read_csv("/data/projects/operations/wvflux_meteograms/utils/ecmwf_coeffs.txt",names=["A","B"],sep=" ")
     coeffA = np.array(coeff["A"])[:, np.newaxis, np.newaxis]
     coeffB = np.array(coeff["B"])[:, np.newaxis, np.newaxis]
 
@@ -180,31 +177,31 @@ def read_ecmwf_S2D(filename, vardict, show_catalog=False):
 
     #iterating over all variables in the vardict and storing each one in a new dictionary called selected_vars
     for var in vardict.keys():
-    
+
         ds = xr.open_dataset(filename,
                         engine='cfgrib',filter_by_keys=vardict[var],backend_kwargs={"indexpath": ''})
-        
+
         ## subset to lat, lon, and pressure levels we need
         lat_lst = np.arange(26., 70., 1.)
         lon_lst = np.arange(186., 250., 1)
         ds = ds.sel(latitude=lat_lst, longitude=lon_lst, method='nearest')
-        
+
         selected_vars[var] = ds[vardict[var]["shortName"]]
-        
-        
 
 
-        
+
+
+
     ngrids = pressure.shape[0]*pressure.shape[1]*pressure.shape[2]
-    
+
     #creating pressure 3d data array and its attributes
     pressure = xr.DataArray(pressure, name="pressure", dims=("hybrid", "latitude","longitude"), coords={"hybrid": coeff.index, "latitude":sfc_pressure_ds.latitude.values, "longitude":sfc_pressure_ds.longitude.values, "time":sfc_pressure_ds.time.values, "valid_time":sfc_pressure_ds.valid_time.values})
     pressure.attrs = {'GRIB_paramId': 0, 'GRIB_dataType': 'fc', 'GRIB_numberOfPoints': ngrids, 'GRIB_typeOfLevel': 'hybrid', 'GRIB_stepUnits': 1, 'GRIB_stepType': 'instant', 'GRIB_gridType': 'regular_ll', 'GRIB_NV': 276, 'GRIB_Nx': len(pressure.longitude.values), 'GRIB_Ny': len(pressure.latitude.values), 'GRIB_Nz': len(pressure.hybrid.values), 'GRIB_cfName': 'unknown', 'GRIB_cfVarName': 'pressure', 'GRIB_gridDefinitionDescription': 'Latitude/longitude', 'GRIB_iDirectionIncrementInDegrees': 0.1, 'GRIB_iScansNegatively': 0, 'GRIB_jDirectionIncrementInDegrees': 0.1, 'GRIB_jPointsAreConsecutive': 0, 'GRIB_jScansPositively': 0, 'GRIB_latitudeOfFirstGridPointInDegrees': np.nanmax(pressure.latitude.values), 'GRIB_latitudeOfLastGridPointInDegrees': np.nanmin(pressure.latitude.values), 'GRIB_longitudeOfFirstGridPointInDegrees': np.nanmin(pressure.longitude.values), 'GRIB_longitudeOfLastGridPointInDegrees': np.nanmax(pressure.longitude.values), 'GRIB_missingValue': 3.4028234663852886e+38, 'GRIB_name': 'Grid wise atmospheric pressure', 'GRIB_shortName': 'pressure', 'GRIB_units': 'Numeric', 'long_name': 'Atmospheric Pressure', 'units': 'hPa', 'standard_name': 'unknown'}
-    
-    
+
+
     #adding pressure variable to the object dictionary
     selected_vars["pressure"] = pressure
-    
+
 
     #standardize latitude longitude time and level dimension name and position in the array
 
@@ -212,23 +209,23 @@ def read_ecmwf_S2D(filename, vardict, show_catalog=False):
 
 
 def read_ecmwf_S1D(filename, vardict, show_catalog=False):
-    
+
     '''
     author: Ricardo Vilela
     email: rbatistavilela@ucsd.edu
 
     function usage:
-    
+
     filename example:
     S1D04151200041515001
 
     vardict example:
 
     vardict = {
-               
+
                "msl_pressure":{"shortName":'msl'}, #msl pressure
-                
-                
+
+
                 }
     Output:
     Dictionary of objects for each variable set in the vardict argument. Ex.
@@ -236,53 +233,53 @@ def read_ecmwf_S1D(filename, vardict, show_catalog=False):
 
 
     '''
-    
+
     print('[INFO] reading ECMWF file: '+filename)
-        
+
     selected_vars = {}
 
     #iterating over all variables in the vardict and storing each one in a new dictionary called selected_vars
     for var in vardict.keys():
-    
+
         ds = xr.open_dataset(filename,
                         engine='cfgrib',filter_by_keys=vardict[var],backend_kwargs={"indexpath": ''})
-        
+
         ## subset to lat, lon, and pressure levels we need
         lat_lst = np.arange(26., 70., 1.)
         lon_lst = np.arange(186., 250., 1)
         ds = ds.sel(latitude=lat_lst, longitude=lon_lst, method='nearest')
-        
+
         if var == 'u_wind_10m':
             selected_vars[var] = ds["u10"]
         elif var == 'v_wind_10m':
             selected_vars[var] = ds["v10"]
-        else:    
-            selected_vars[var] = ds[vardict[var]["shortName"]]   
-        
+        else:
+            selected_vars[var] = ds[vardict[var]["shortName"]]
+
     return selected_vars
 
 class load_GFS_datasets:
     '''
     Loads variables needed for wvflux meteogram plots from GFS .grb2 files
-    
+
     Parameters
     ----------
     F : int
         the forecast lead requested
-        
+
     fdate : str
         string of date for the filename in YYYYMMDDHH format
-  
+
     Returns
     -------
-    xarray : 
+    xarray :
         xarray dataset object with variables
-    
+
     '''
     def __init__(self, F, fdate=None):
         print('Preprocessing {0} ...'.format(F))
         self.F = F
-        
+
         #########################
         ### READ NEW GFS DATA ###
         #########################
@@ -294,10 +291,10 @@ class load_GFS_datasets:
             self.date_string = regex.findall(self.fpath)[-1]
         elif fdate is not None:
             self.date_string = fdate
-            self.fpath = f'/data/projects/external_datasets/GFS/processed/{self.date_string}/'
-        
-        fname = f'{self.date_string}_F{str(self.F).zfill(3)}.grb2'
-        
+            self.fpath = '/data/projects/external_datasets/GFS/processed/{0}/'.format(self.date_string)
+
+        fname = '{0}_F{1}.grb2'.format(self.date_string, str(self.F).zfill(3))
+
         self.fname = self.fpath+fname
         print(self.fname)
     def calc_vars(self):
@@ -317,7 +314,7 @@ class load_GFS_datasets:
             }
         if self.F > 0:
             gfs_vardict.update(prec_dict)
-            
+
         #gfs is a dictionary of datasets
         gfs = read_gfs_deterministic(filename=self.fname,vardict=gfs_vardict, show_catalog=False)
 
@@ -340,46 +337,48 @@ class load_GFS_datasets:
         else:
             ds = xr.merge([gfs["u_wind"], gfs["v_wind"], gfs["rh"], gfs["iwv"], gfs["temperature"], gfs["orog"],
                            gfs["sfc_pressure"], gfs['freezing_level']])
-            
-        
+
+
         ## add in calculated vars
         ds = ds.assign(wvflux=(['isobaricInhPa','latitude','longitude'],wv_flux))
 
         ## write intermediate data files
-        tmp_directory = f"{globalvars.path_to_repo}data/tmp/"
+        tmp_directory = "/data/projects/operations/wvflux_meteograms/data/tmp/"
         out_fname = tmp_directory+'tmp_{0}_{1}.nc'.format('GFS', str(self.F).zfill(3))
         ds.to_netcdf(path=out_fname, mode = 'w', format='NETCDF4')
         ds.close() ## close data
 
         return None
-    
+
 class load_ECMWF_datasets:
     '''
     Loads variables needed for ivt cross section plots from ECMWF grb files
-    
+
     Parameters
     ----------
     F : int
         the forecast lead requested
-        
+
     fdate : str
         string of date for the filename in YYYYMMDDHH format
-  
+
     Returns
     -------
-    xarray : 
+    xarray :
         xarray dataset object with variables
-    
+
     '''
     def __init__(self, F, fdate=None):
         self.F = F
         if fdate is not None:
             date_string = fdate
-            fpath = f'/data/projects/external_datasets/ECMWF_HRes/processed/{fdate}'
+#            fpath = '/data/downloaded/Forecasts/ECMWF/NRT_data/{0}'.format(fdate)
+            fpath = '/data/projects/external_datasets/ECMWF_HRes/processed/{0}'.format(fdate)
             date_string = fdate
             print(date_string)
 
         else:
+#            path_to_data = '/data/downloaded/Forecasts/ECMWF/NRT_data/*'
             path_to_data = '/data/projects/external_datasets/ECMWF_HRes/processed/*'
             list_of_files = glob.glob(path_to_data)
             fpath = max(list_of_files, key=os.path.getctime)
@@ -388,14 +387,14 @@ class load_ECMWF_datasets:
             print(date_string)
 
 
-        init_time = datetime.strptime(date_string,'%Y%m%d%H')
-        lead_time = timedelta(hours=int(F))
-        sp_lead_time = timedelta(hours=3)
+        init_time = datetime.datetime.strptime(date_string,'%Y%m%d%H')
+        lead_time = datetime.timedelta(hours=int(F))
+        sp_lead_time = datetime.timedelta(hours=3)
 
-        ecmwf_s2d_filename = "/S2D{init:%m%d%H%M}{valid:%m%d%H%M}1.grb".format(init=init_time, valid=init_time+lead_time)
+        ecmwf_s2d_filename = "/S2D{init:%m%d%H%M}{valid:%m%d%H%M}1".format(init=init_time, valid=init_time+lead_time)
         ecmwf_s1d_filename = "/S1D{init:%m%d%H%M}{valid:%m%d%H%M}1".format(init=init_time, valid=init_time+lead_time)
 
-        self.ecmwf_s2d_filename = fpath+"/S2D{init:%m%d%H%M}{valid:%m%d%H%M}1.grb".format(init=init_time, valid=init_time+lead_time)
+        self.ecmwf_s2d_filename = fpath+"/S2D{init:%m%d%H%M}{valid:%m%d%H%M}1".format(init=init_time, valid=init_time+lead_time)
         self.ecmwf_s1d_filename = fpath+"/S1D{init:%m%d%H%M}{valid:%m%d%H%M}1".format(init=init_time, valid=init_time+lead_time)
         ## need a special filename for freezing level at F=0
         self.ecmwf_s1d_special_filename = fpath+"/S1D{init:%m%d%H%M}{valid:%m%d%H%M}1".format(init=init_time, valid=init_time+sp_lead_time)
@@ -415,7 +414,7 @@ class load_ECMWF_datasets:
                         "tp": {'shortName': 'tp'},
                         "z": {'shortName': 'z'},
                         }
-        
+
         ecmwf_F00_vardict = {
                         "sfc_pressure":{"shortName":'sp'},
                         "iwv":{"shortName":'tcw'},
@@ -425,29 +424,30 @@ class load_ECMWF_datasets:
         ##reading ecmwf s1d and s2d files
         ##ecmwf is a dictionary of datasets
         ecmwf_s2d = read_ecmwf_S2D(filename=self.ecmwf_s2d_filename,vardict=ecmwf_s2d_vardict, show_catalog=False)
-        
+
         if self.F == 0:
             ecmwf_s1d = read_ecmwf_S1D(filename=self.ecmwf_s1d_filename,
-                                       vardict=ecmwf_F00_vardict, 
+                                       vardict=ecmwf_F00_vardict,
                                        show_catalog=False)
             ## have to read freezing level from +03 lead
             ecmwf_deg0l = read_ecmwf_S1D(filename=self.ecmwf_s1d_special_filename,
                                          vardict={"freezing_level": {'shortName': 'deg0l'}},
                                          show_catalog=False)
-            
+
         else:
             ecmwf_s1d = read_ecmwf_S1D(filename=self.ecmwf_s1d_filename,vardict=ecmwf_s1d_vardict, show_catalog=False)
+
 
         ## calculating wvflux
         rh = cfuncs.calc_relative_humidity_from_specific_humidity(ecmwf_s2d["pressure"], ecmwf_s2d["temperature"], ecmwf_s2d["specific_humidity"])
         density = cfuncs.calculate_air_density(pressure=ecmwf_s2d["pressure"].values, temperature=ecmwf_s2d["temperature"], relative_humidity=rh)
-        
+
         wv_flux = cfuncs.calculate_wvflux(uwind=ecmwf_s2d["u_wind"].values, vwind=ecmwf_s2d["v_wind"].values, density=density, specific_humidity=ecmwf_s2d["specific_humidity"].values)
-        
-        wv_flux = xr.DataArray(wv_flux, name="wvflux", 
-                             dims=("hybrid", "latitude","longitude"), 
-                             coords={"hybrid": rh.hybrid.values, 
-                                     "latitude": rh.latitude.values, 
+
+        wv_flux = xr.DataArray(wv_flux, name="wvflux",
+                             dims=("hybrid", "latitude","longitude"),
+                             coords={"hybrid": rh.hybrid.values,
+                                     "latitude": rh.latitude.values,
                                      "longitude": rh.longitude.values})
 
         ## creating a 3D time array for plotting
@@ -468,7 +468,7 @@ class load_ECMWF_datasets:
                         'gh': (['latitude', 'longitude'], ecmwf_s1d["freezing_level"].values),
                         'orog': (['latitude', 'longitude'], ecmwf_s1d["z"].values/10.),
                         'tp': (['latitude', 'longitude'], ecmwf_s1d["tp"].values*1000.)}
-        else: 
+        else:
             var_dict = {'pwat': (['latitude', 'longitude'], ecmwf_s1d["iwv"].values),
                         'sp': (['latitude', 'longitude'], ecmwf_s1d["sfc_pressure"].values),
                         'orog': (['latitude', 'longitude'], ecmwf_s1d["z"].values/10.),
@@ -477,19 +477,19 @@ class load_ECMWF_datasets:
         model_data = xr.Dataset(var_dict,
                                 coords={'latitude': (['latitude'], ecmwf_s1d["sfc_pressure"].latitude.values),
                                         'longitude': (['longitude'], ecmwf_s1d["sfc_pressure"].longitude.values)},
-                               attrs={"model":"ECMWF", "init":str(ecmwf_s1d["sfc_pressure"].time.values), 
+                               attrs={"model":"ECMWF", "init":str(ecmwf_s1d["sfc_pressure"].time.values),
                                       "valid_time":str(ecmwf_s1d["sfc_pressure"].valid_time.values)})
 
         ## merge vertical level data and single level data
         model_data = xr.merge([model_data, ds1])
-        
+
         ## rename rh to r to match GFS
         model_data = model_data.rename({'rh': 'r'})
 
         ## write intermediate data files
-        tmp_directory = f"{globalvars.path_to_repo}data/tmp/"
+        tmp_directory = "/data/projects/operations/wvflux_meteograms/data/tmp/"
         out_fname = tmp_directory + 'tmp_{0}_{1}.nc'.format('ECMWF', str(self.F).zfill(3))
         model_data.to_netcdf(path=out_fname, mode = 'w', format='NETCDF4')
         model_data.close() ## close data
-        
+
         return None
