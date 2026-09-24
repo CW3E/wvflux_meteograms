@@ -19,10 +19,16 @@ from datetime import datetime, timedelta
 import cartopy.crs as ccrs
 
 import calc_funcs as cfuncs
+import globalvars
+globalvars.configure()
 
 def read_preprocessed_IVT_data(model, F_lst, fdate=None):
     
-    path_to_data = '/data/projects/derived_products/{0}_IVT/*/'.format(model)
+    if model == "ECMWF":
+        path_to_data = f'/data/projects/derived_products/{model}_IVT/Deterministic/*/'
+    else:
+        path_to_data = f'/data/projects/derived_products/{model}_IVT/*/'
+        
     if fdate is None:
         list_of_files = glob.glob(path_to_data)
         fpath = max(list_of_files, key=os.path.getctime)
@@ -30,10 +36,13 @@ def read_preprocessed_IVT_data(model, F_lst, fdate=None):
         date_string = regex.findall(fpath)[-1]
     elif fdate is not None:
         date_string = fdate
-        fpath = '/data/projects/derived_products/{0}_IVT/{1}/'.format(model, date_string)
+        if model == "ECMWF":
+            fpath = f'/data/projects/derived_products/{model}_IVT/Deterministic/{date_string}/'
+        else:
+         fpath = f'/data/projects/derived_products/{model}_IVT/{date_string}/'
     ds_lst = []    
     for i, F in enumerate(F_lst):
-        fname = '{0}_IVT_{1}_F{2}.nc'.format(model, date_string, str(F).zfill(3))
+        fname = f'{model}_IVT_{date_string}_F{str(F).zfill(3)}.nc'
         ds = xr.open_mfdataset(fpath+fname)
         
         ## subset to points used for plots
@@ -162,7 +171,7 @@ def read_ecmwf_S2D(filename, vardict, show_catalog=False):
     sfc_pressure = 2.71828**sfc_pressure_ds.lnsp.values
 
     #read the coefficient lookup table
-    coeff = pd.read_csv("/data/projects/operations/wvflux_meteograms/utils/ecmwf_coeffs.txt",names=["A","B"],sep=" ")
+    coeff = pd.read_csv(f"{globalvars.path_to_repo}utils/ecmwf_coeffs.txt",names=["A","B"],sep=" ")
     coeffA = np.array(coeff["A"])[:, np.newaxis, np.newaxis]
     coeffB = np.array(coeff["B"])[:, np.newaxis, np.newaxis]
 
@@ -285,9 +294,9 @@ class load_GFS_datasets:
             self.date_string = regex.findall(self.fpath)[-1]
         elif fdate is not None:
             self.date_string = fdate
-            self.fpath = '/data/projects/external_datasets/GFS/processed/{0}/'.format(self.date_string)
+            self.fpath = f'/data/projects/external_datasets/GFS/processed/{self.date_string}/'
         
-        fname = '{0}_F{1}.grb2'.format(self.date_string, str(self.F).zfill(3))
+        fname = f'{self.date_string}_F{str(self.F).zfill(3)}.grb2'
         
         self.fname = self.fpath+fname
         print(self.fname)
@@ -337,7 +346,7 @@ class load_GFS_datasets:
         ds = ds.assign(wvflux=(['isobaricInhPa','latitude','longitude'],wv_flux))
 
         ## write intermediate data files
-        tmp_directory = "/data/projects/operations/wvflux_meteograms/data/tmp/"
+        tmp_directory = f"{globalvars.path_to_repo}data/tmp/"
         out_fname = tmp_directory+'tmp_{0}_{1}.nc'.format('GFS', str(self.F).zfill(3))
         ds.to_netcdf(path=out_fname, mode = 'w', format='NETCDF4')
         ds.close() ## close data
@@ -366,12 +375,12 @@ class load_ECMWF_datasets:
         self.F = F
         if fdate is not None:
             date_string = fdate
-            fpath = '/data/downloaded/Forecasts/ECMWF/NRT_data/{0}'.format(fdate)
+            fpath = f'/data/projects/external_datasets/ECMWF_HRes/processed/{fdate}'
             date_string = fdate
             print(date_string)
 
         else:
-            path_to_data = '/data/downloaded/Forecasts/ECMWF/NRT_data/*'
+            path_to_data = '/data/projects/external_datasets/ECMWF_HRes/processed/*'
             list_of_files = glob.glob(path_to_data)
             fpath = max(list_of_files, key=os.path.getctime)
             regex = re.compile(r'\d+')
@@ -478,7 +487,7 @@ class load_ECMWF_datasets:
         model_data = model_data.rename({'rh': 'r'})
 
         ## write intermediate data files
-        tmp_directory = "/data/projects/operations/wvflux_meteograms/data/tmp/"
+        tmp_directory = f"{globalvars.path_to_repo}data/tmp/"
         out_fname = tmp_directory + 'tmp_{0}_{1}.nc'.format('ECMWF', str(self.F).zfill(3))
         model_data.to_netcdf(path=out_fname, mode = 'w', format='NETCDF4')
         model_data.close() ## close data

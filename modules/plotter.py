@@ -35,15 +35,15 @@ from scipy.ndimage import gaussian_filter
 import copy
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 import cw3ecmaps as ccmaps
+import globalvars
+globalvars.configure()
 
 def roundPartial(value, resolution):
     return np.round(value / resolution) * resolution
 
 def set_cw3e_font(current_dpi, scaling_factor, model_name):
-    if model_name == 'WWRF':
-        path_to_font = '/cw3e/mead/projects/cwp186/repos/wvflux_meteograms/utils/fonts/helvetica.ttc'
-    else:
-        path_to_font = '/home/cw3eit/ARPortal/gefs/scripts/ar_landfall_tool/utils/fonts/helvetica.ttc'
+    
+    path_to_font = globalvars.path_to_repo / 'utils' / 'fonts' / 'helvetica.ttc'
     fm.fontManager.addfont(path_to_font)
 
     plt.rcParams.update({
@@ -67,11 +67,7 @@ def set_cw3e_font(current_dpi, scaling_factor, model_name):
 
 def plot_cw3e_logo(ax, orientation):
     ## location of CW3E logo
-    if orientation == 'horizontal':
-        im = '/common/CW3E_Logo_Suite/1-Horzontal-PRIMARY_LOGO/Digital/JPG-RGB/CW3E-Logo-Horizontal-FullColor-RGB.jpg'
-    else:
-        # im = '/common/CW3E_Logo_Suite/5-Vertical-Acronym_Only/Digital/PNG/CW3E-Logo-Vertical-Acronym-FullColor.png'
-        im = '/cw3e/mead/projects/cwp186/repos/wvflux_meteograms/utils/CW3E-Logo-Vertical-Acronym-FullColor.png'
+    im = globalvars.path_to_repo / 'utils' / 'CW3E-Logo-Vertical-Acronym-FullColor.png'
     img = np.asarray(Image.open(im))
     ax.imshow(img)
     ax.axis('off')
@@ -190,6 +186,50 @@ def draw_basemap(ax, datacrs=ccrs.PlateCarree(), extent=None, xticks=None, ytick
     
     return ax
 
+def create_figure_outname(varname, model_name, duration, flat_lbl, flon_lbl, fig_path):
+    if model_name == 'GFS':
+        fig_path = fig_path+'GFS/'
+        model_str = 'GFS_25'
+    elif model_name == 'ECMWF':
+        fig_path = fig_path+'ECMWF/'
+        model_str = 'ECMWF_HRes'
+    elif model_name == 'WWRF'
+        fig_path = fig_path+'WWRF/'
+        model_str = 'WWRF'
+    else:
+        raise ValueError("Choose either GFS, ECMWF or WWRF")
+
+    if varname == 'wvflux':
+        if duration == 3:
+            product_str = 'watervaporflux_3day_meteogram'
+            fhour_str = 'F072'
+        elif duration == 7:
+            product_str = 'watervaporflux_7day_meteogram'
+            fhour_str = 'F168'
+        else:
+            raise ValueError("duration must be 3 or 7")
+
+    elif varname == 'r':
+        if duration == 3:
+            product_str = 'rh_3day_meteogram'
+            fhour_str = 'F072'
+        elif duration == 7:
+            product_str = 'rh_7day_meteogram'
+            fhour_str = 'F168'
+        else:
+            raise ValueError("duration must be 3 or 7")
+    else:
+        raise ValueError("please choose either 'r' or 'wvflux' for varname")
+
+    domain_str = f"{flat_lbl}_{flon_lbl}"
+    init_str = pd.to_datetime(ds.time.values).strftime('%Y%m%d%H')
+    version = 'v1'
+    run = '1'
+
+    fname = (f"{fig_path}{product_str}__{version}__{model_str}__{domain_str}__{init_str}__{run}__{fhour_str}")
+    fmt = 'png'
+
+    return fname, fmt
 
 def plot_time_height_meteograms(ds, varname, lat, lon, model_name, duration, fig_path="/data/projects/operations/wvflux_meteograms/figs/"):
     '''
@@ -214,6 +254,9 @@ def plot_time_height_meteograms(ds, varname, lat, lon, model_name, duration, fig
     
     duration : int
         duration of plot - either 7 or 3 (day)
+
+    fig_path : str
+        base location of where figs are saved
   
     Returns
     -------
@@ -306,15 +349,7 @@ def plot_time_height_meteograms(ds, varname, lat, lon, model_name, duration, fig
     ## use gs[rows index, columns index] to access grids
     fig = plt.figure(figsize=(10., 14.))
     fig.dpi = current_dpi
-    if varname == 'wvflux':
-        fname = fig_path + '{0}/{0}_{1}DayWVFlux_{2}_{3}'.format(model_name, duration, flat_lbl, flon_lbl)
-    elif varname == 'r':
-        fname = fig_path + '{0}/{0}_{1}DayRH_{2}_{3}'.format(model_name, duration, flat_lbl, flon_lbl)
-    else:
-        print('please choose either r or wvflux for varname', flush=True)
-        
-    
-    fmt = 'png'
+    fname, fmt = create_figure_outname(varname, model_name, duration, flat_lbl, flon_lbl, fig_path)
 
     ####################
     ### TIME-HEIGHT  ###
