@@ -53,6 +53,11 @@ echo "FINISHED AT "$date
 
 cd /data/projects/operations/wvflux_meteograms
 
+yyyy="2026"
+mm="09"
+dd="24"
+hh="00"
+
 date=`date`
 echo "STARTING PLOTS AT "$date
 
