@@ -16,6 +16,7 @@ import xarray as xr
 import numpy as np
 import pandas as pd
 from datetime import datetime, timedelta
+from pathlib import Path
 import cartopy.crs as ccrs
 from netCDF4 import Dataset
 from wrf import getvar
@@ -33,27 +34,34 @@ def find_nearest_indices(ds, lat, lon):
     return iy, ix
 
 def subset_wwrf_ds(ds):
-    # input lists
+    # NPAC Locations
     lat_lst = np.arange(26, 51, 1)
-    lon_lst = np.arange(360-128, 360-111, 1)
-    
-    # Build Cartesian product of all pairs
+    lon_lst = np.arange(360 - 128, 360 - 111, 1)
+
+    # SEAK Locations
+    lat_lst2 = np.arange(51, 60, 1)
+    lon_lst2 = np.arange(360 - 141, 360 - 130, 1)
+
+    # Build Cartesian products for each set separately
     lat_grid, lon_grid = np.meshgrid(lat_lst, lon_lst, indexing="ij")
-    lats = lat_grid.ravel()
-    lons = lon_grid.ravel()
-    
+    lat_grid2, lon_grid2 = np.meshgrid(lat_lst2, lon_lst2, indexing="ij")
+
+    # Flatten and concatenate the two sets
+    lats = np.concatenate([lat_grid.ravel(), lat_grid2.ravel()])
+    lons = np.concatenate([lon_grid.ravel(), lon_grid2.ravel()])
+
     # Get indices for all requested points
     indices = [find_nearest_indices(ds, la, lo) for la, lo in zip(lats, lons)]
     iy = [i[0] for i in indices]
     ix = [i[1] for i in indices]
-    
+
     # Subset the dataset
     subset = ds.isel(
         y=xr.DataArray(iy, dims="location"),
         x=xr.DataArray(ix, dims="location")
     )
-    
-    # Attach the requested coordinates to the new "location" dim
+
+    # Attach the requested coordinates to the new "location" dimension
     subset = subset.assign_coords(
         location=np.arange(len(lats)),
         latitude=("location", lats),
@@ -190,27 +198,62 @@ class load_WWRF_datasets:
         saved netCDF tmp intermediate data file
     
     '''
-    def __init__(self, F, tmp_directory, init_str=None):
-        self.F = F
-        if init_str is not None:
-            fpath = f"/cw3e/mead/datasets/cw3e/NRT/2025-2026/NRT_gfs/{init_str}/"
-
-        else:
-            path_to_data = '/cw3e/mead/datasets/cw3e/NRT/2025-2026/NRT_gfs/*'
-            list_of_files = glob.glob(path_to_data)
-            fpath = max(list_of_files, key=os.path.getctime)
-            regex = re.compile(r'\d+')
-            init_str = regex.findall(fpath)[-1]
-
-        # create init_time str in this format '2025-09-10_01_00_00' based on fdate and F
-        # parse initialization time
-        init_time = datetime.strptime(init_str, "%Y%m%d%H")
-
-        # add lead time in hours
-        valid_time = init_time + timedelta(hours=int(F))
+    def __init__(self, F, tmp_directory, model, init_str):
+        self.F = int(F)
+        ## get model name
+        model_dirs = {
+            "WWRF_gfs": "gfs",
+            "WWRF_ecmwf": "ecmwf",
+        }
         
-        self.wwrf_cf_filename = fpath+f"cf/wrfcf_gfs_d01_{valid_time:%Y-%m-%d_%H_%M_%S}.nc"
-        self.wwrfout_filename = fpath+f"wrfout/wrfout_d01_{valid_time:%Y-%m-%d_%H_%M_%S}"
+        if model not in model_dirs:
+            raise ValueError(
+                f"Unsupported model '{model}'. "
+                f"Expected one of: {list(model_dirs)}"
+            )
+
+        self.model = model
+        self.model_name = model_dirs[model]
+
+        # Validate and parse initialization time
+        try:
+            init_time = datetime.strptime(init_str, "%Y%m%d%H")
+        except ValueError as exc:
+            raise ValueError(
+                f"Invalid initialization time '{init_str}'. "
+                "Expected format YYYYMMDDHH."
+            ) from exc
+        
+        # Calculate valid time
+        valid_time = init_time + timedelta(hours=self.F)
+        
+        valid_time_str = valid_time.strftime("%Y-%m-%d_%H_%M_%S")
+
+        # get WY
+        if init_time.month >= 10:
+            season = f"{init_time.year}-{init_time.year + 1}"
+        elif init_time.month <= 3:
+            season = f"{init_time.year - 1}-{init_time.year}"
+        else:
+            raise ValueError(
+                f"Initialization date {init_time:%Y-%m-%d} is outside the "
+                "October-March season."
+            )
+        
+        data_root = Path(
+            f"/cw3e/mead/datasets/cw3e/NRT/{season}/NRT_{self.model_name}"
+        )
+        
+        fpath = data_root / init_str
+        
+        self.wwrf_cf_filename = str(
+            fpath / f"cf/wrfcf_{self.model_name}_d01_{valid_time_str}.nc"
+        )
+    
+        self.wwrfout_filename = str(
+            fpath / f"wrfout/wrfout_d01_{valid_time_str}"
+        )
+        
         self.tmp_dir = tmp_directory
         
     def calc_vars(self):
@@ -320,7 +363,7 @@ class load_WWRF_datasets:
         ####################################
         ## write intermediate data files ###
         ####################################
-        out_fname = self.tmp_dir + f'preprocess_F{self.F}.nc'
+        out_fname = self.tmp_dir + f'preprocess_{self.model}_F{self.F}.nc'
         subset.to_netcdf(path=out_fname, mode = 'w', format='NETCDF4')
         subset.close() ## close data
 
@@ -328,10 +371,23 @@ class load_WWRF_datasets:
     
         return None
 
-def load_WWRF_QPF(fdate):
+def load_WWRF_QPF(fdate, model):
+    model_dirs = {
+            "WWRF_gfs": "gfs",
+            "WWRF_ecmwf": "ecmwf",
+        }
+        
+    if model not in model_dirs:
+        raise ValueError(
+            f"Unsupported model '{model}'. "
+            f"Expected one of: {list(model_dirs)}"
+        )
+    
+    model_name = model_dirs[model]
+
     ### LOAD QPF data
-    fpath = f"/cw3e/mead/datasets/cw3e/NRT/2025-2026/NRT_gfs/{fdate}/QPF_output/"
-    filename = f"West-WRF_gfs_1hQPF_9km_{fdate}_F1-240.nc"
+    fpath = f"/cw3e/mead/datasets/cw3e/NRT/2025-2026/NRT_{model_name}/{fdate}/QPF_output/"
+    filename = f"West-WRF_{model_name}_1hQPF_9km_{fdate}_F1-240.nc"
     
     qpf = xr.open_dataset(fpath+filename)
     

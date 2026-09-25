@@ -20,7 +20,7 @@ singularity exec --bind /data:/data -e /data/projects/operations/wvflux_meteogra
 date=`date`
 echo "FINISHED PLOTS AT "$date
 
-cd /data/projects/operations/wvflux_meteograms/figs/ECMWF
+cd /data/projects/operations/wvflux_meteograms/figs/ECMWF/"$yyyy$mm$dd$hh"
 
 chmod 664 *.png
 for filename in watervaporflux_3day_meteogram__v1__ECMWF_HRes__*

@@ -65,7 +65,7 @@ date=`date`
 echo "FINISHED PLOTS AT "$date
 
 
-cd /data/projects/operations/wvflux_meteograms/figs/GFS
+cd /data/projects/operations/wvflux_meteograms/figs/GFS/"$yyyy$mm$dd$hh"
 
 chmod 664 *.png
 for filename in watervaporflux_3day_meteogram__v1__GFS_25__*

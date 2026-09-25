@@ -1,6 +1,7 @@
 [task parameters]
+    MODEL = WWRF_gfs, WWRF_ecmwf
     F = 0..168..3
-    SITE = 0..424..1
+    SITE = 0..523..1
 
 [scheduler]
     allow implicit tasks = True
@@ -10,16 +11,16 @@
 
     [[graph]]
         R1 = """
-            preprocess<F> => gather_preprocess
-            gather_preprocess => site_preprocess<SITE>
-            site_preprocess<SITE> => plot<SITE>
+            preprocess<MODEL,F> => gather_preprocess<MODEL>
+            gather_preprocess<MODEL> => site_preprocess<MODEL,SITE>
+            site_preprocess<MODEL,SITE> => plot<MODEL,SITE>
         """
 
 [runtime]
     [[root]]
         execution time limit = PT2H
 
-    [[preprocess<F>]]
+    [[preprocess<MODEL,F>]]
         platform = slurm_platform
 
         script = """
@@ -29,6 +30,7 @@
                 --bind /cw3e:/cw3e \
                 /cw3e/mead/projects/cwp186/repos/wvflux_meteograms/envs/wvflux_meteograms.sif \
                 /cw3e/mead/projects/cwp186/repos/wvflux_meteograms/cylc-src/WWRF_workflow/bin/preprocess.py \
+                --model ${CYLC_TASK_PARAM_MODEL} \
                 --leadtime ${CYLC_TASK_PARAM_F} \
                 --init_date ${CYLC_TASK_CYCLE_POINT}
         """
@@ -40,10 +42,10 @@
             --cpus-per-task = 4
             --mem = 8G
 
-    [[gather_preprocess]]
-        script = "echo all lead times processed"
+    [[gather_preprocess<MODEL>]]
+        script = "echo all ${CYLC_TASK_PARAM_MODEL} lead times processed"
 
-    [[site_preprocess<SITE>]]
+    [[site_preprocess<MODEL,SITE>]]
         platform = slurm_platform
 
         script = """
@@ -53,6 +55,7 @@
                 --bind /cw3e:/cw3e \
                 /cw3e/mead/projects/cwp186/repos/wvflux_meteograms/envs/wvflux_meteograms.sif \
                 /cw3e/mead/projects/cwp186/repos/wvflux_meteograms/cylc-src/WWRF_workflow/bin/extract_site.py \
+                --model ${CYLC_TASK_PARAM_MODEL} \
                 --site ${CYLC_TASK_PARAM_SITE} \
                 --init_date ${CYLC_TASK_CYCLE_POINT}
         """
@@ -64,7 +67,7 @@
             --cpus-per-task = 4
             --mem = 8G
 
-    [[plot<SITE>]]
+    [[plot<MODEL,SITE>]]
         platform = slurm_platform
 
         script = """
@@ -74,6 +77,7 @@
                 --bind /cw3e:/cw3e \
                 /cw3e/mead/projects/cwp186/repos/wvflux_meteograms/envs/wvflux_meteograms.sif \
                 /cw3e/mead/projects/cwp186/repos/wvflux_meteograms/cylc-src/WWRF_workflow/bin/plot.py \
+                --model ${CYLC_TASK_PARAM_MODEL} \
                 --site ${CYLC_TASK_PARAM_SITE} \
         """
     

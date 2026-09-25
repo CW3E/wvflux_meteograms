@@ -12,17 +12,19 @@ globalvars.configure()
 
 def main():
     parser = argparse.ArgumentParser(description="Extract site-specific time series from lead-time NetCDFs")
-    parser.add_argument("--site", required=True, help="Site integer: values 0-424")
+    parser.add_argument("--model", required=True, help="WWRF_gfs or WWRF_ecmwf")
+    parser.add_argument("--site", required=True, help="Site integer: values 0-523")
     parser.add_argument("--init_date", required=True, help="the initialization date to preprocess in YYYYMMDDHH")
     parser.add_argument("--indir", type=str, default=globalvars.path_to_repo+"data/tmp/", help="Directory containing per-leadtime NetCDF files")
     parser.add_argument("--outdir", type=str, default=globalvars.path_to_repo+"data/site_data/", help="Output directory")
-    parser.add_argument("--pattern", default="preprocess_F{F}.nc",
+    parser.add_argument("--pattern", default="preprocess_{model}_F{F}.nc",
                         help="Filename pattern inside indir (default: preprocess_F{F}.nc)")
     parser.add_argument("--leadmin", type=int, default=0, help="Minimum forecast lead time (hours)")
     parser.add_argument("--leadmax", type=int, default=168, help="Maximum forecast lead time (hours)")
     parser.add_argument("--leadstep", type=int, default=3, help="Step in forecast lead times (hours)")
     args = parser.parse_args()
 
+    model_name = args.model
     site = args.site
     init_str = datetime.strptime(args.init_date, "%Y%m%dT%H00Z").strftime("%Y%m%d%H")
 
@@ -31,7 +33,7 @@ def main():
     #################################
     print('Removing tmp intermediate data files...') 
     # Specify the directory and the pattern
-    fname = args.outdir+f"site{site}.nc"  # Delete all intermediate preprocessed files
+    fname = args.outdir+f"site{site}_{model_name}.nc"  # Delete all intermediate preprocessed files
     try:
         os.remove(fname)
         print(f"Deleted: {fname}")
@@ -41,7 +43,7 @@ def main():
     # collect datasets for each lead time
     datasets = []
     for F in range(args.leadmin, args.leadmax + 1, args.leadstep):
-        fname = os.path.join(args.indir, args.pattern.format(F=F))
+        fname = os.path.join(args.indir, args.pattern.format(model=model_name, F=F))
         if not os.path.exists(fname):
             print(f"Warning: missing file {fname}, skipping")
             continue
@@ -57,7 +59,7 @@ def main():
     combined = xr.concat(datasets, dim="step")
 
     # open already processed QPF, select lat/lon, and merge datasets
-    qpf = load_WWRF_QPF(init_str) ## read preprocessed qpf
+    qpf = load_WWRF_QPF(init_str, model_name) ## read preprocessed qpf
     qpf_site = qpf.sel(location=int(site))
     
     ds = xr.merge([combined, qpf_site], compat='no_conflicts')
@@ -67,7 +69,7 @@ def main():
     # ds["step"].attrs.update({"units": "hours", "description": "Forecast lead time"})
  
     # save site-specific file
-    outname = f"{args.outdir}site{site}.nc"
+    outname = f"{args.outdir}{model_name}_site{site}.nc"
     ds.to_netcdf(outname)
     print(f"Saved site-specific file to {args.outdir}")
 

@@ -186,49 +186,68 @@ def draw_basemap(ax, datacrs=ccrs.PlateCarree(), extent=None, xticks=None, ytick
     
     return ax
 
-def create_figure_outname(varname, model_name, duration, flat_lbl, flon_lbl, init_str, fig_path):
-    if model_name == 'GFS':
-        fig_path = fig_path+'GFS/'
-        model_str = 'GFS_25'
-    elif model_name == 'ECMWF':
-        fig_path = fig_path+'ECMWF/'
-        model_str = 'ECMWF_HRes'
-    elif model_name == 'WWRF':
-        fig_path = fig_path+'WWRF/'
-        model_str = 'WWRF_9km_GFS'
-    else:
-        raise ValueError("Choose either GFS, ECMWF or WWRF")
+from pathlib import Path
 
-    if varname == 'wvflux':
-        if duration == 3:
-            product_str = 'watervaporflux_3day_meteogram'
-            fhour_str = 'F072'
-        elif duration == 7:
-            product_str = 'watervaporflux_7day_meteogram'
-            fhour_str = 'F168'
-        else:
-            raise ValueError("duration must be 3 or 7")
 
-    elif varname == 'r':
-        if duration == 3:
-            product_str = 'rh_3day_meteogram'
-            fhour_str = 'F072'
-        elif duration == 7:
-            product_str = 'rh_7day_meteogram'
-            fhour_str = 'F168'
-        else:
-            raise ValueError("duration must be 3 or 7")
-    else:
-        raise ValueError("please choose either 'r' or 'wvflux' for varname")
+def create_figure_outname(
+    varname, model_name, duration, flat_lbl, flon_lbl, init_str, fig_path
+):
+    model_info = {
+        "GFS": ("GFS", "GFS_25"),
+        "ECMWF": ("ECMWF", "ECMWF_HRes"),
+        "WWRF_gfs": ("WWRF_gfs", "WWRF_9km_GFS"),
+        "WWRF_ecmwf": ("WWRF_ecmwf", "WWRF_9km_ECMWF"),
+    }
 
+    variable_info = {
+        "wvflux": {
+            3: ("watervaporflux_3day_meteogram", "F072"),
+            7: ("watervaporflux_7day_meteogram", "F168"),
+        },
+        "r": {
+            3: ("rh_3day_meteogram", "F072"),
+            7: ("rh_7day_meteogram", "F168"),
+        },
+    }
+
+    # Validate model
+    if model_name not in model_info:
+        raise ValueError(
+            f"Unknown model '{model_name}'. "
+            f"Choose from {list(model_info)}."
+        )
+
+    model_dir, model_str = model_info[model_name]
+
+    # Validate variable and duration
+    if varname not in variable_info:
+        raise ValueError(
+            f"Unknown variable '{varname}'. Choose from {list(variable_info)}."
+        )
+
+    if duration not in variable_info[varname]:
+        raise ValueError(
+            f"Invalid duration '{duration}' for variable '{varname}'. "
+            "Choose 3 or 7."
+        )
+
+    product_str, fhour_str = variable_info[varname][duration]
+
+    # Create and validate output directory
+    fig_path = Path(fig_path) / model_dir / init_str
+    fig_path.mkdir(parents=True, exist_ok=True)
+
+    # Construct filename
     domain_str = f"{flat_lbl}_{flon_lbl}"
-    version = 'v1'
-    run = '1'
+    version = "v1"
+    run = "1"
 
-    fname = (f"{fig_path}{product_str}__{version}__{model_str}__{domain_str}__{init_str}__{run}__{fhour_str}")
-    fmt = 'png'
+    output_fname = (
+        f"{product_str}__{version}__{model_str}__"
+        f"{domain_str}__{init_str}__{run}__{fhour_str}.png"
+    )
 
-    return fname, fmt
+    return str(fig_path / output_fname)
 
 def plot_time_height_meteograms(ds, varname, lat, lon, model_name, duration, fig_path="/data/projects/operations/wvflux_meteograms/figs/"):
     '''
@@ -278,7 +297,7 @@ def plot_time_height_meteograms(ds, varname, lat, lon, model_name, duration, fig
         ds = ds.transpose('hybrid', 'step')
         xs2 = ds.valid_time_td.values
         ys = ds.pressure.values
-    elif model_name == 'WWRF':
+    elif (model_name == 'WWRF_gfs') | (model_name == 'WWRF_ecmwf'):
         ds = ds.transpose('z', 'step')
         xs2 = ds.valid_time_td.values
         ys = ds.pressure.values/100.
@@ -306,7 +325,8 @@ def plot_time_height_meteograms(ds, varname, lat, lon, model_name, duration, fig
     ivt_units = 'kg m$^{-1}$ s$^{-1}$'
     rh_units = '%'
     wind_units = '(knots)'
-    title = '{0} {1}-day Time-Height Meteogram | {2} {3}'.format(model_name, duration, lat_lbl, lon_lbl)
+    model_display = model_name.replace("_", " ").upper()
+    title = f'{model_display} {duration}-day Time-Height Meteogram | {lat_lbl} {lon_lbl}'
 
     init_date = pd.to_datetime(ds.time.values).strftime('%H UTC %d %b %Y')
     left_title = 'Initialized: {0}'.format(init_date)
@@ -349,7 +369,7 @@ def plot_time_height_meteograms(ds, varname, lat, lon, model_name, duration, fig
     fig = plt.figure(figsize=(10., 14.))
     fig.dpi = current_dpi
     init_str = pd.to_datetime(ds.time.values).strftime('%Y%m%d%H')
-    fname, fmt = create_figure_outname(varname, model_name, duration, flat_lbl, flon_lbl, init_str, fig_path)
+    output_fname = create_figure_outname(varname, model_name, duration, flat_lbl, flon_lbl, init_str, fig_path)
 
     ####################
     ### TIME-HEIGHT  ###
@@ -358,7 +378,7 @@ def plot_time_height_meteograms(ds, varname, lat, lon, model_name, duration, fig
     ## y-axis is pressure
     ## x-axis is time
     xs = ds.valid_time.values
-    if model_name == "WWRF":
+    if (model_name == 'WWRF_gfs') | (model_name == 'WWRF_ecmwf'):
         terline = ds.sp.values ## sp in hPa already
     else:
         terline = ds.sp.values / 100. ## convert from Pa to hPa
@@ -390,7 +410,7 @@ def plot_time_height_meteograms(ds, varname, lat, lon, model_name, duration, fig
     ## add freezing level
     kw_clabels = {'fontsize': 11, 'inline': True, 'inline_spacing': 5, 'fmt': '%i',
                   'rightside_up': True, 'use_clabeltext': True}
-    if model_name == "WWRF":
+    if (model_name == 'WWRF_gfs') | (model_name == 'WWRF_ecmwf'):
         t = ds['t'].values
     else:
         t = ds['t'].values-273.15 # need to convert from K to *C
@@ -398,7 +418,7 @@ def plot_time_height_meteograms(ds, varname, lat, lon, model_name, duration, fig
     plt.clabel(z0, **kw_clabels)
 
     # wind vectors
-    if (model_name == 'ECMWF') | (model_name == 'WWRF'):
+    if (model_name == 'ECMWF') | (model_name == 'WWRF_gfs') | (model_name == 'WWRF_ecmwf'):
         dw = 4 # how often to plot vector vertically
         dw2 = 1 # how often to plot horizontally
         ax.barbs(xs2[::dw, ::dw2], ys[::dw, ::dw2], 
@@ -595,7 +615,7 @@ def plot_time_height_meteograms(ds, varname, lat, lon, model_name, duration, fig
                     zorder=200,
                     **style)
 
-    fig.savefig('%s.%s' %(fname, fmt), bbox_inches='tight', dpi=fig.dpi, transparent=False)
+    fig.savefig(output_fname, bbox_inches='tight', dpi=fig.dpi, transparent=False)
     # fig.clf()
     # close figure
     plt.close(plt.gcf())

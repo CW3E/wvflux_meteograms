@@ -20,10 +20,11 @@ from plotter import plot_time_height_meteograms
 
 def main():
     parser = argparse.ArgumentParser(description="Plot time-height meteograms using site-specific time series")
+    parser.add_argument("--model", required=True, help="WWRF_gfs or WWRF_ecmwf")
     parser.add_argument("--site", required=True, help="Site integer: values 0-424")
     parser.add_argument("--indir", type=str, default=globalvars.path_to_repo+"data/site_data/", help="site data directory")
-    parser.add_argument("--outdir", type=str, default=globalvars.path_to_repo+"/figs/", help="Plot output directory")
-    parser.add_argument("--pattern", default="site{site}.nc",
+    parser.add_argument("--outdir", type=str, default=globalvars.path_to_repo+"figs/", help="Plot output directory")
+    parser.add_argument("--pattern", default="{model}_site{site}.nc",
                         help="Filename pattern inside indir (default: site{site}.nc)")
     args = parser.parse_args()
     
@@ -31,11 +32,11 @@ def main():
     dur_lst = [7, 3]
 
     ## open the site data
-    fname = os.path.join(args.indir, args.pattern.format(site=args.site))
+    fname = os.path.join(args.indir, args.pattern.format(model=args.model, site=args.site))
     ds = xr.open_dataset(fname)
     lat = ds.latitude.values
     lon = ds.longitude.values
-    model_name = "WWRF"
+    model_name = args.model
 
     for varname in var_lst:
         for dur in dur_lst:
@@ -45,7 +46,7 @@ def main():
                 ts = pd.timedelta_range(start='0 day', periods=25, freq='3h')
             subset_ds = ds.sel(step=ts)
                 
-            plot_time_height_meteograms(subset_ds, varname, lat, 360-lon, model_name, dur, fig_path=args.outdir)
+            plot_time_height_meteograms(subset_ds, varname, lat, lon, model_name, dur, fig_path=args.outdir)
 
 if __name__ == "__main__":
     main()
